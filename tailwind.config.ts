@@ -11,6 +11,12 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        // Couleurs DRG
+        "drg-dark": "#0f1923",
+        "drg-orange": "#e8a320",
+        "drg-orange-light": "#f5b942",
+        "drg-panel": "#1a2535",
+        "drg-border": "#2a3a50",
       },
     },
   },
