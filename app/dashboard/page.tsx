@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { DashboardData } from "@/lib/types";
 import ClassCard from "@/components/ClassCard";
+import HeroStats from "@/components/HeroStats";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -20,11 +21,15 @@ export default function DashboardPage() {
           <h1 className="text-drg-orange text-4xl font-bold uppercase tracking-widest">
             {data.player.name}
           </h1>
+          <HeroStats heroStats={data.hero_stats} />
           <div className="grid grid-cols-2 gap-4 mt-8">
             {data.classes.map((classData) => (
               <ClassCard key={classData.name} classData={classData} />
             ))}
           </div>
+          <pre className="text-xs text-white mt-8">
+            {JSON.stringify(data.hero_stats, null, 2)}
+          </pre>
         </>
       )}
     </div>
