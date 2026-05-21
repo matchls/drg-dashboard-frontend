@@ -18,6 +18,9 @@ const config: Config = {
         "drg-panel": "#1a2535",
         "drg-border": "#2a3a50",
       },
+      fontFamily: {
+        sans: ["var(--font-barlow)", "sans-serif"],
+      },
     },
   },
   plugins: [],

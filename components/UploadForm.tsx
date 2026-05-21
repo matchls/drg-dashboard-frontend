@@ -16,7 +16,6 @@ const tips = [
 export default function UploadForm() {
   const [playerName, setPlayerName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [result, setResult] = useState<ApiResponse | null>(null);
   const resultRef = useRef<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -46,7 +45,6 @@ export default function UploadForm() {
     if (!playerName || !selectedFile) return;
     setIsLoading(true);
     const response = await parseSaveFile(selectedFile, playerName);
-    setResult(response);
     resultRef.current = response;
   }
 
