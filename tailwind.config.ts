@@ -12,11 +12,11 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         // Couleurs DRG
-        "drg-dark": "#0f1923",
+        "drg-dark": "#110b06",
         "drg-orange": "#e8a320",
         "drg-orange-light": "#f5b942",
-        "drg-panel": "#1a2535",
-        "drg-border": "#2a3a50",
+        "drg-panel": "#1e1208",
+        "drg-border": "#3d2a0f",
       },
       fontFamily: {
         sans: ["var(--font-barlow)", "sans-serif"],
