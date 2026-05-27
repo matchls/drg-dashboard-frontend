@@ -65,9 +65,15 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-drg-dark text-white p-8">
       {data && (
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-drg-orange text-4xl font-bold uppercase tracking-widest">
-            {data.player.name}
-          </h1>
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+              SPACE RIG PROFILE
+            </p>
+            <h1 className="text-drg-orange text-5xl font-bold uppercase tracking-widest">
+              {data.player.name}
+            </h1>
+            <div className="h-0.5 w-16 bg-drg-orange mt-2"></div>
+          </div>
           <HeroStats heroStats={data.hero_stats} />
           <div className="grid grid-cols-2 gap-4 mt-8">
             {data.classes.map((classData) => (
