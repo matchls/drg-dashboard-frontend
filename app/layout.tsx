@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, Bebas_Neue, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/NavBar";
+import SideNav from "@/components/SideNav";
+import TopBar from "@/components/TopBar";
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
@@ -33,17 +34,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
-          rel="stylesheet"
-        />
-      </head>
       <body
-        className={`${barlowCondensed.variable} ${bebasNeue.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${barlowCondensed.variable} ${bebasNeue.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-on-surface flex h-screen`}
       >
-        <Navbar></Navbar>
-        {children}
+        <SideNav />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <TopBar />
+          <main className="flex-1 overflow-y-auto">{children}</main>
+        </div>
       </body>
     </html>
   );
