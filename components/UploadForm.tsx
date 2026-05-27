@@ -22,6 +22,7 @@ export default function UploadForm() {
   const [currentTip, setCurrentTip] = useState(0);
   // apiDone passe à true quand le backend a répondu
   const [apiDone, setApiDone] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const router = useRouter();
 
   // Effect 1 : anime la barre de progression sur 4 secondes
@@ -147,7 +148,43 @@ export default function UploadForm() {
               </p>
             )}
           </div>
+          {/* Aide pour trouver le fichier */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowHelp(!showHelp)}
+              className="font-mono text-xs text-on-surface-variant tracking-widest hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">
+                {showHelp ? "expand_less" : "expand_more"}
+              </span>
+              OÙ TROUVER MON FICHIER ?
+            </button>
 
+            {showHelp && (
+              <div className="mt-2 bg-surface-dim border-l-4 border-primary p-4 font-mono text-xs text-on-surface-variant flex flex-col gap-2">
+                <p>
+                  1. Clic droit sur{" "}
+                  <span className="text-primary">Deep Rock Galactic</span> dans
+                  Steam
+                </p>
+                <p>
+                  2. Gérer →{" "}
+                  <span className="text-primary">
+                    Parcourir les fichiers locaux
+                  </span>
+                </p>
+                <p>
+                  3. Naviguer vers{" "}
+                  <span className="text-primary">FSD \ Saved \ SaveGames</span>
+                </p>
+                <p>
+                  4. Prendre le fichier{" "}
+                  <span className="text-primary">.sav le plus récent</span>
+                </p>
+              </div>
+            )}
+          </div>
           {/* Avertissement */}
           <div className="bg-surface-dim border-l-4 border-error px-4 py-3">
             <p className="font-mono text-xs text-on-surface-variant italic">
