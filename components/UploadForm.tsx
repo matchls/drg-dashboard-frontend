@@ -47,7 +47,10 @@ export default function UploadForm() {
   // avant qu'on ouvre la porte suivante.
   useEffect(() => {
     if (apiDone && progress >= 100) {
-      sessionStorage.setItem("dashboardData", JSON.stringify(resultRef.current));
+      sessionStorage.setItem(
+        "dashboardData",
+        JSON.stringify(resultRef.current),
+      );
       router.push("/dashboard");
     }
   }, [apiDone, progress, router]);
@@ -71,65 +74,106 @@ export default function UploadForm() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-drg-dark text-white flex flex-col justify-center items-center">
-        <p className="text-drg-orange text-xl font-bold uppercase tracking-widest">
+      <div className="min-h-screen bg-background industrial-grid flex flex-col justify-center items-center gap-6">
+        <p className="font-display text-2xl text-primary tracking-widest">
           {tips[currentTip]}
         </p>
-        <div className="w-full max-w-md mt-8 relative border-2 border-drg-orange p-1">
-          <div className="h-6 bg-drg-panel overflow-hidden">
+        <div className="w-full max-w-md border-4 border-outline p-1 bg-surface-container pressed-metal">
+          <div className="h-6 bg-surface-dim overflow-hidden relative">
             <div
-              className="h-full bg-drg-orange"
+              className="h-full bg-primary transition-all duration-75"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
+        <p className="font-mono text-xs text-on-surface-variant tracking-widest">
+          PROCESSING... {progress}%
+        </p>
       </div>
     );
   }
   return (
-    <div className="min-h-screen bg-drg-dark text-white flex items-center justify-center">
-      <div className="w-full max-w-md">
-        <h1 className="text-4xl font-bold uppercase tracking-widest text-drg-orange text-center">
-          DRG Dashboard
-        </h1>
-        <input
-          type="text"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          placeholder="Tape ton pseudo"
-          className="w-full px-4 py-3 mt-8 rounded bg-drg-panel border border-drg-border text-white"
-        />
-        <div className="mt-4 border-2 border-dashed border-drg-orange rounded-lg p-8 text-center">
-          <p>Dépose ton fichier de sauvegarde ici !</p>
-          <p>
-            (Chemin : ..\Steam\steamapps\common\Deep Rock
-            Galactic\FSD\Saved\SaveGames)
-          </p>
-          <input
-            type="file"
-            accept=".sav"
-            onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-          />
+    <div className="min-h-screen bg-background industrial-grid flex items-center justify-center relative overflow-hidden">
+      {/* Coins en rayures danger */}
+      <div className="absolute top-0 left-0 w-24 h-24 hazard-stripes opacity-40" />
+      <div className="absolute top-0 right-0 w-24 h-24 hazard-stripes opacity-40" />
+      <div className="absolute bottom-0 left-0 w-24 h-24 hazard-stripes opacity-40" />
+      <div className="absolute bottom-0 right-0 w-24 h-24 hazard-stripes opacity-40" />
+
+      {/* Panel central */}
+      <div className="industrial-panel pressed-metal w-full max-w-lg mx-4">
+        {/* Header du panel */}
+        <div className="p-6 border-b-4 border-outline flex items-center gap-3">
+          <span className="material-symbols-outlined text-primary">
+            terminal
+          </span>
+          <h1 className="font-display text-3xl text-on-surface tracking-widest">
+            SAVE-FILE SUBMISSION TERMINAL
+          </h1>
         </div>
-        <div className="mt-6 flex justify-center">
-          <div className="relative transition-transform duration-150 hover:scale-110 group">
-            <div
-              className="w-64 h-12 bg-drg-orange group-hover:bg-white"
-              style={{
-                clipPath: "polygon(90% 0, 100% 47%, 100% 100%, 0 100%, 0 0)",
-              }}
+
+        <div className="p-6 flex flex-col gap-6">
+          {/* Input pseudo */}
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+              fingerprint
+            </span>
+            <input
+              type="text"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              placeholder="ENTER OPERATIVE ID"
+              className="w-full bg-surface-dim border-b-4 border-primary text-on-surface font-mono pl-10 pr-4 py-3 placeholder:text-on-surface-variant placeholder:tracking-widest focus:outline-none"
             />
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="absolute inset-0.5 w-[calc(100%-4px)] font-bold uppercase tracking-widest bg-drg-dark text-drg-orange group-hover:text-white"
-              style={{
-                clipPath: "polygon(90% 0, 99.8% 50%, 99.8% 100%, 0 100%, 0 0)",
-              }}
-            >
-              Analyser
-            </button>
           </div>
+
+          {/* Dropzone */}
+          <div className="scan-line border-2 border-dashed border-outline-variant p-8 flex flex-col items-center gap-3 text-center">
+            <span className="material-symbols-outlined text-4xl text-on-surface-variant">
+              architecture
+            </span>
+            <p className="font-mono text-sm text-on-surface-variant tracking-widest">
+              DRAG &amp; DROP .SAV FILE HERE
+            </p>
+            <input
+              type="file"
+              accept=".sav"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              className="text-on-surface-variant font-mono text-xs"
+            />
+            {selectedFile && (
+              <p className="text-primary font-mono text-xs tracking-widest">
+                ✓ {selectedFile.name}
+              </p>
+            )}
+          </div>
+
+          {/* Avertissement */}
+          <div className="bg-surface-dim border-l-4 border-error px-4 py-3">
+            <p className="font-mono text-xs text-on-surface-variant italic">
+              ⚠ AUTHORIZED PERSONNEL ONLY — UNAUTHORIZED ACCESS WILL BE REPORTED
+              TO MANAGEMENT
+            </p>
+          </div>
+
+          {/* Bouton submit */}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="relative w-full bg-primary text-on-primary font-display text-xl tracking-widest py-3 flex items-center justify-center gap-2 overflow-hidden hover:bg-primary-fixed transition-colors"
+          >
+            <div className="absolute inset-0 hazard-stripes opacity-10" />
+            <span className="material-symbols-outlined">cloud_upload</span>
+            SUBMIT FOR ANALYSIS
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t-4 border-outline">
+          <p className="font-mono text-xs text-on-surface-variant tracking-widest">
+            Ver: 8.4.2-STABLE | Loc: Hoxxes IV / Space Rig 17 | Enc:
+            Deep-Rock-Standard
+          </p>
         </div>
       </div>
     </div>
