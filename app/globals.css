@@ -1,27 +1,98 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=optional");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0d0805;
+  --foreground: #f0e8d0;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Fond quadrillé orange subtil */
+  .industrial-grid {
+    background-image:
+      linear-gradient(rgba(232, 163, 32, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232, 163, 32, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Rayures diagonales danger */
+  .hazard-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 8px,
+      rgba(232, 163, 32, 0.15) 8px,
+      rgba(232, 163, 32, 0.15) 16px
+    );
+  }
+
+  /* Barre animée qui descend (page upload) */
+  .scan-line {
+    position: relative;
+    overflow: hidden;
+  }
+  .scan-line::after {
+    content: "";
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(232, 163, 32, 0.3);
+    animation: scanDown 4s linear infinite;
+  }
+  @keyframes scanDown {
+    from {
+      top: -4px;
+    }
+    to {
+      top: 100%;
+    }
+  }
+
+  /* Overlay lignes horizontales statiques */
+  .scanline-overlay {
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    );
+  }
+
+  /* Ombre interne — effet métal pressé */
+  .pressed-metal {
+    box-shadow:
+      inset 0 2px 8px rgba(0, 0, 0, 0.6),
+      inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Panel DRG standard avec bande orange en haut */
+  .industrial-panel {
+    background-color: #261608;
+    border: 4px solid #2e1c0a;
+    position: relative;
+  }
+  .industrial-panel::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    height: 4px;
+    background-color: #e8a320;
   }
 }
