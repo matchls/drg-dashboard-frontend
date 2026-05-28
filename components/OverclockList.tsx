@@ -11,6 +11,14 @@ interface Props {
   overclocks: OverclocksData;
 }
 
+// Icones des classes (même mapping que ClassCard)
+const CLASS_ICONS: Record<string, string> = {
+  Driller: "/icons/classes/driller_icon.png",
+  Gunner:  "/icons/classes/gunner_icon.png",
+  Engineer: "/icons/classes/engineer_icon.png",
+  Scout:   "/icons/classes/scout_icon.png",
+};
+
 export default function OverclockList({ overclocks }: Props) {
   const t = useTranslation();
   const { prefs } = usePrefs();
@@ -19,36 +27,34 @@ export default function OverclockList({ overclocks }: Props) {
   const [selectedClass, setSelectedClass] = useState<
     (typeof CLASS_NAMES)[number] | null
   >(null);
+
+  // Cliquer sur une classe active la sélectionne ; recliquer la désélectionne
+  function toggleClass(className: (typeof CLASS_NAMES)[number]) {
+    setSelectedClass((prev) => (prev === className ? null : className));
+  }
+
   return (
     <div className="industrial-panel flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b-4 border-outline flex items-center gap-3">
-        <span className="material-symbols-outlined text-primary">
-          construction
-        </span>
+        <Image
+          src="/icons/resources/overclock_core_icon.png"
+          alt="Overclock core"
+          width={28}
+          height={28}
+          className="opacity-90"
+        />
         <p className="font-display text-xl text-on-surface tracking-widest">
           {t("forgeStatus")}
         </p>
       </div>
-      {/* Filtres par classe */}
-      <div className="px-4 pt-3 pb-1 flex gap-2 flex-wrap">
-        {/* Bouton "TOUTES" */}
-        <button
-          onClick={() => setSelectedClass(null)}
-          className={`font-display text-xs tracking-widest px-2 py-1 border transition-colors ${
-            selectedClass === null
-              ? "border-drg-orange text-drg-orange"
-              : "border-drg-border text-on-surface-variant hover:border-drg-orange"
-          }`}
-        >
-          {t("allClasses")}
-        </button>
 
-        {/* Un bouton par classe */}
+      {/* Filtres par classe — pas de bouton "Toutes", cliquer re-sélectionne */}
+      <div className="px-4 pt-3 pb-1 flex gap-2 flex-wrap">
         {CLASS_NAMES.map((className) => (
           <button
             key={className}
-            onClick={() => setSelectedClass(className)}
+            onClick={() => toggleClass(className)}
             style={
               selectedClass === className
                 ? {
@@ -57,16 +63,24 @@ export default function OverclockList({ overclocks }: Props) {
                   }
                 : {}
             }
-            className={`font-display text-xs tracking-widest px-2 py-1 border transition-colors ${
+            className={`font-display text-sm tracking-widest px-3 py-1 border transition-colors flex items-center gap-1.5 ${
               selectedClass === className
                 ? ""
                 : "border-drg-border text-on-surface-variant hover:border-drg-orange"
             }`}
           >
+            <Image
+              src={CLASS_ICONS[className]}
+              alt={className}
+              width={18}
+              height={18}
+              className="opacity-80"
+            />
             {className.toUpperCase()}
           </button>
         ))}
       </div>
+
       {/* Liste scrollable */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         {(selectedClass ? [selectedClass] : CLASS_NAMES).map((className) => {
@@ -75,35 +89,51 @@ export default function OverclockList({ overclocks }: Props) {
 
           return (
             <div key={className} className="flex flex-col gap-2">
-              {/* Header par classe */}
-              <p className="font-display text-sm text-drg-orange tracking-widest border-b border-drg-border pb-1">
-                {className.toUpperCase()} · {classOverclocks.length} {t("forged")}
-              </p>
-              {/* Overclocks de cette classe */}
-              {classOverclocks.map((oc) => (
-                <div
-                  key={oc.guid}
-                  className="flex items-center gap-3 bg-surface-container-highest border border-outline p-2"
+              {/* Header par classe : icone + nom + compteur */}
+              <div className="flex items-center gap-2 border-b border-drg-border pb-1">
+                <Image
+                  src={CLASS_ICONS[className]}
+                  alt={className}
+                  width={20}
+                  height={20}
+                  className="opacity-80"
+                />
+                <p
+                  className="font-display text-sm tracking-widest"
+                  style={{ color: CLASS_COLORS[className] }}
                 >
-                  {WEAPON_ICONS[oc.weapon] && (
-                    <Image
-                      src={WEAPON_ICONS[oc.weapon]}
-                      alt={oc.weapon}
-                      width={36}
-                      height={36}
-                      className="opacity-80"
-                    />
-                  )}
-                  <div>
-                    <p className="font-mono text-sm text-on-surface">
-                      {translateOverclockName(oc.name, prefs.language)}
-                    </p>
-                    <p className="font-mono text-xs text-on-surface-variant">
-                      {oc.weapon}
-                    </p>
+                  {className.toUpperCase()} · {classOverclocks.length}{" "}
+                  {t("forged")}
+                </p>
+              </div>
+
+              {/* Grille responsive des overclocks */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {classOverclocks.map((oc) => (
+                  <div
+                    key={oc.guid}
+                    className="flex items-center gap-3 bg-surface-container-highest border border-outline p-2"
+                  >
+                    {WEAPON_ICONS[oc.weapon] && (
+                      <Image
+                        src={WEAPON_ICONS[oc.weapon]}
+                        alt={oc.weapon}
+                        width={48}
+                        height={48}
+                        className="opacity-80 flex-shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-mono text-sm text-on-surface truncate">
+                        {translateOverclockName(oc.name, prefs.language)}
+                      </p>
+                      <p className="font-mono text-xs text-on-surface-variant truncate">
+                        {oc.weapon}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           );
         })}

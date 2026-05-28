@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { DashboardData, CLASS_COLORS } from "@/lib/types";
 import { usePrefs } from "@/lib/PrefsContext";
 import { formatDistance, formatTime } from "@/lib/formatters";
 import { useTranslation, TranslationKey } from "@/lib/i18n";
 import { translateStatName } from "@/lib/data-translations";
+import { MISSION_STAT_ICONS } from "@/lib/missionIcons";
 
 interface Props {
   missionStats: DashboardData["mission_stats"];
@@ -100,7 +102,19 @@ export default function MissionStats({ missionStats }: Props) {
                 className="border-b border-outline hover:bg-surface-container-high"
               >
                 <td className="p-4 font-mono text-sm text-on-surface">
-                  {translateStatName(stat.name, prefs.language)}
+                  <div className="flex items-center gap-2">
+                    {/* Icone de mission si disponible */}
+                    {MISSION_STAT_ICONS[stat.name] && (
+                      <Image
+                        src={MISSION_STAT_ICONS[stat.name]}
+                        alt={stat.name}
+                        width={24}
+                        height={24}
+                        className="opacity-80 flex-shrink-0"
+                      />
+                    )}
+                    {translateStatName(stat.name, prefs.language)}
+                  </div>
                 </td>
                 <td className="p-4 font-mono text-sm text-primary text-right">
                   {formatValue(stat.total, stat.unit)}
