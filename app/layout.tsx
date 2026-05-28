@@ -3,6 +3,7 @@ import { Barlow_Condensed, Bebas_Neue, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import SideNav from "@/components/SideNav";
 import TopBar from "@/components/TopBar";
+import Footer from "@/components/Footer";
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
@@ -48,6 +49,7 @@ export default function RootLayout({
         <div className="flex flex-col flex-1 overflow-hidden">
           <TopBar />
           <main className="flex-1 overflow-y-auto">{children}</main>
+          <Footer />
         </div>
       </body>
     </html>
