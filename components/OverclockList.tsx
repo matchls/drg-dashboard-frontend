@@ -23,31 +23,45 @@ export default function OverclockList({ overclocks }: Props) {
       </div>
 
       {/* Liste scrollable */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
-        {CLASS_NAMES.map((className) =>
-          overclocks.forged_by_dwarf[className]?.map((oc) => (
-            <div
-              key={oc.guid}
-              className="flex items-center gap-3 bg-surface-container-highest border border-outline p-2"
-            >
-              {WEAPON_ICONS[oc.weapon] && (
-                <Image
-                  src={WEAPON_ICONS[oc.weapon]}
-                  alt={oc.weapon}
-                  width={36}
-                  height={36}
-                  className="opacity-80"
-                />
-              )}
-              <div>
-                <p className="font-mono text-sm text-on-surface">{oc.name}</p>
-                <p className="font-mono text-xs text-on-surface-variant">
-                  {oc.weapon}
-                </p>
-              </div>
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        {CLASS_NAMES.map((className) => {
+          const classOverclocks = overclocks.forged_by_dwarf[className] ?? [];
+          if (classOverclocks.length === 0) return null;
+
+          return (
+            <div key={className} className="flex flex-col gap-2">
+              {/* Header par classe */}
+              <p className="font-display text-sm text-drg-orange tracking-widest border-b border-drg-border pb-1">
+                {className.toUpperCase()} · {classOverclocks.length} FORGED
+              </p>
+              {/* Overclocks de cette classe */}
+              {classOverclocks.map((oc) => (
+                <div
+                  key={oc.guid}
+                  className="flex items-center gap-3 bg-surface-container-highest border border-outline p-2"
+                >
+                  {WEAPON_ICONS[oc.weapon] && (
+                    <Image
+                      src={WEAPON_ICONS[oc.weapon]}
+                      alt={oc.weapon}
+                      width={36}
+                      height={36}
+                      className="opacity-80"
+                    />
+                  )}
+                  <div>
+                    <p className="font-mono text-sm text-on-surface">
+                      {oc.name}
+                    </p>
+                    <p className="font-mono text-xs text-on-surface-variant">
+                      {oc.weapon}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          )),
-        )}
+          );
+        })}
       </div>
 
       {/* Footer */}
