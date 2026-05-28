@@ -23,6 +23,13 @@ const CLASS_ICONS: Record<string, string> = {
   Scout: "/icons/classes/scout_icon.png",
 };
 
+const CLASS_IMAGES: Record<string, string> = {
+  Driller: "/icons/classes/driller_img.png",
+  Gunner: "/icons/classes/gunner_img.png",
+  Engineer: "/icons/classes/engineer_img.png",
+  Scout: "/icons/classes/scout_img.png",
+};
+
 // Retourne la clé i18n du rang selon le nombre de missions
 function getRankKey(missions: number): { key: TranslationKey; className: string } {
   if (missions >= 500) return { key: "rankVeteran",    className: "text-primary border border-primary" };
@@ -51,38 +58,52 @@ export default function ClassCard({ classData }: Props) {
         className={`h-1.5 w-full ${CLASS_TOP_COLORS[classData.name] ?? "bg-primary"}`}
       />
 
-      <div className="p-4">
-        {/* Header : icône + nom + badge */}
-        <div className="flex items-center gap-3 mb-4">
-          <Image
-            src={CLASS_ICONS[classData.name] ?? ""}
-            alt={classData.name}
-            width={36}
-            height={36}
-            className="opacity-90"
-          />
-          <p className="font-display text-2xl text-on-surface tracking-widest flex-1">
-            {classData.name.toUpperCase()}
-          </p>
-          <span
-            className={`font-mono text-xs px-2 py-0.5 tracking-widest ${rank.className}`}
-          >
-            {t(rank.key)}
-          </span>
+      <div className="p-4 flex gap-4">
+        {/* Colonne gauche : header + stats */}
+        <div className="flex-1 min-w-0">
+          {/* Header : icône + nom + badge */}
+          <div className="flex items-center gap-3 mb-4">
+            <Image
+              src={CLASS_ICONS[classData.name] ?? ""}
+              alt={classData.name}
+              width={36}
+              height={36}
+              className="opacity-90"
+            />
+            <p className="font-display text-2xl text-on-surface tracking-widest flex-1">
+              {classData.name.toUpperCase()}
+            </p>
+            <span
+              className={`font-mono text-xs px-2 py-0.5 tracking-widest ${rank.className}`}
+            >
+              {t(rank.key)}
+            </span>
+          </div>
+
+          {/* Stats */}
+          {stats.map(({ label, value }) => (
+            <div
+              key={label}
+              className="flex justify-between py-1.5 border-b border-outline last:border-0"
+            >
+              <span className="font-mono text-xs text-on-surface-variant tracking-widest">
+                {label}
+              </span>
+              <span className="font-mono text-sm text-on-surface">{value}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Stats */}
-        {stats.map(({ label, value }) => (
-          <div
-            key={label}
-            className="flex justify-between py-1.5 border-b border-outline last:border-0"
-          >
-            <span className="font-mono text-xs text-on-surface-variant tracking-widest">
-              {label}
-            </span>
-            <span className="font-mono text-sm text-on-surface">{value}</span>
-          </div>
-        ))}
+        {/* Photo de classe — visible uniquement sur grands écrans */}
+        <div className="hidden xl:flex items-end justify-center flex-shrink-0 w-28 -mb-4 -mr-4">
+          <Image
+            src={CLASS_IMAGES[classData.name] ?? ""}
+            alt={classData.name}
+            width={112}
+            height={160}
+            className="object-contain object-bottom opacity-80"
+          />
+        </div>
       </div>
     </div>
   );
