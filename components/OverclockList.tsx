@@ -11,24 +11,21 @@ interface Props {
   overclocks: OverclocksData;
 }
 
-// Icones des classes (même mapping que ClassCard)
 const CLASS_ICONS: Record<string, string> = {
-  Driller: "/icons/classes/driller_icon.png",
-  Gunner:  "/icons/classes/gunner_icon.png",
+  Driller:  "/icons/classes/driller_icon.png",
+  Gunner:   "/icons/classes/gunner_icon.png",
   Engineer: "/icons/classes/engineer_icon.png",
-  Scout:   "/icons/classes/scout_icon.png",
+  Scout:    "/icons/classes/scout_icon.png",
 };
 
 export default function OverclockList({ overclocks }: Props) {
   const t = useTranslation();
   const { prefs } = usePrefs();
   const totalForged = overclocks.forged_count;
-  // null = toutes les classes affichées, sinon le nom de la classe sélectionnée
   const [selectedClass, setSelectedClass] = useState<
     (typeof CLASS_NAMES)[number] | null
   >(null);
 
-  // Cliquer sur une classe active la sélectionne ; recliquer la désélectionne
   function toggleClass(className: (typeof CLASS_NAMES)[number]) {
     setSelectedClass((prev) => (prev === className ? null : className));
   }
@@ -49,7 +46,7 @@ export default function OverclockList({ overclocks }: Props) {
         </p>
       </div>
 
-      {/* Filtres par classe — pas de bouton "Toutes", cliquer re-sélectionne */}
+      {/* Filtres par classe */}
       <div className="px-4 pt-3 pb-1 flex gap-2 flex-wrap">
         {CLASS_NAMES.map((className) => (
           <button
@@ -57,13 +54,10 @@ export default function OverclockList({ overclocks }: Props) {
             onClick={() => toggleClass(className)}
             style={
               selectedClass === className
-                ? {
-                    color: CLASS_COLORS[className],
-                    borderColor: CLASS_COLORS[className],
-                  }
+                ? { color: CLASS_COLORS[className], borderColor: CLASS_COLORS[className] }
                 : {}
             }
-            className={`font-display text-sm tracking-widest px-3 py-1 border transition-colors flex items-center gap-1.5 ${
+            className={`font-display text-m tracking-widest px-3 py-1 border transition-colors flex items-center gap-1.5 ${
               selectedClass === className
                 ? ""
                 : "border-drg-border text-on-surface-variant hover:border-drg-orange"
@@ -72,8 +66,8 @@ export default function OverclockList({ overclocks }: Props) {
             <Image
               src={CLASS_ICONS[className]}
               alt={className}
-              width={18}
-              height={18}
+              width={30}
+              height={30}
               className="opacity-80"
             />
             {className.toUpperCase()}
@@ -84,12 +78,16 @@ export default function OverclockList({ overclocks }: Props) {
       {/* Liste scrollable */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         {(selectedClass ? [selectedClass] : CLASS_NAMES).map((className) => {
-          const classOverclocks = overclocks.forged_by_dwarf[className] ?? [];
-          if (classOverclocks.length === 0) return null;
+          const forged   = overclocks.forged_by_dwarf[className] ?? [];
+          // Overclocks non-forgés : filtrés depuis le tableau plat par classe
+          const unforged = overclocks.unforged.filter((oc) => oc.dwarf === className);
+          const total    = forged.length + unforged.length;
+
+          if (total === 0) return null;
 
           return (
             <div key={className} className="flex flex-col gap-2">
-              {/* Header par classe : icone + nom + compteur */}
+              {/* Header par classe : icone + nom + compteur forgés / total */}
               <div className="flex items-center gap-2 border-b border-drg-border pb-1">
                 <Image
                   src={CLASS_ICONS[className]}
@@ -99,17 +97,20 @@ export default function OverclockList({ overclocks }: Props) {
                   className="opacity-80"
                 />
                 <p
-                  className="font-display text-sm tracking-widest"
+                  className="font-display text-m tracking-widest"
                   style={{ color: CLASS_COLORS[className] }}
                 >
-                  {className.toUpperCase()} · {classOverclocks.length}{" "}
-                  {t("forged")}
+                  {className.toUpperCase()}
+                </p>
+                <p className="font-mono text-xs text-on-surface-variant tracking-widest">
+                  · {forged.length} {t("forged")} / {total}
                 </p>
               </div>
 
-              {/* Grille responsive des overclocks */}
+              {/* Grille responsive */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {classOverclocks.map((oc) => (
+                {/* Overclocks forgés */}
+                {forged.map((oc) => (
                   <div
                     key={oc.guid}
                     className="flex items-center gap-3 bg-surface-container-highest border border-outline p-2"
@@ -118,9 +119,35 @@ export default function OverclockList({ overclocks }: Props) {
                       <Image
                         src={WEAPON_ICONS[oc.weapon]}
                         alt={oc.weapon}
-                        width={48}
-                        height={48}
+                        width={80}
+                        height={80}
                         className="opacity-80 flex-shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-mono text-sm text-on-surface truncate">
+                        {translateOverclockName(oc.name, prefs.language)}
+                      </p>
+                      <p className="font-mono text-xs text-on-surface-variant truncate">
+                        {oc.weapon}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Overclocks non-forgés — grisés */}
+                {unforged.map((oc) => (
+                  <div
+                    key={oc.guid}
+                    className="flex items-center gap-3 bg-surface-container border border-outline p-2 opacity-40 grayscale"
+                  >
+                    {WEAPON_ICONS[oc.weapon] && (
+                      <Image
+                        src={WEAPON_ICONS[oc.weapon]}
+                        alt={oc.weapon}
+                        width={80}
+                        height={80}
+                        className="flex-shrink-0"
                       />
                     )}
                     <div className="min-w-0">
@@ -142,7 +169,7 @@ export default function OverclockList({ overclocks }: Props) {
       {/* Footer */}
       <div className="p-4 border-t-4 border-outline">
         <p className="font-mono text-xs text-on-surface-variant tracking-widest">
-          {t("totalForged")}: {totalForged} / AVAILABLE SLOTS: ∞
+          {t("totalForged")}: {totalForged} / {totalForged + overclocks.unforged_count}
         </p>
       </div>
     </div>
