@@ -69,40 +69,17 @@ export default function DashboardPage() {
           <HeroStats heroStats={data.hero_stats} />
 
           {/* Grille principale */}
-          <div className="grid grid-cols-3 gap-6">
-            {/* Class Grid 2x2 */}
-            <div className="col-span-2 grid grid-cols-2 gap-4">
-              {data.classes.map((classData) => (
-                <ClassCard key={classData.name} classData={classData} />
-              ))}
-            </div>
-
-            {/* Sidebar droite */}
-            <div className="flex flex-col gap-4">
-              {/* Recent Expeditions */}
-              <div className="industrial-panel p-4 flex flex-col gap-3">
-                <div className="flex items-center gap-3 border-b-4 border-outline pb-3">
-                  <span className="material-symbols-outlined text-primary">
-                    history
-                  </span>
-                  <p className="font-display text-lg text-on-surface tracking-widest">
-                    RECENT EXPEDITIONS
-                  </p>
-                </div>
-                <p className="font-mono text-xs text-on-surface-variant tracking-widest text-center py-4">
-                  DATA UNAVAILABLE — SYSTEM OFFLINE
-                </p>
-              </div>
-
-              {/* Forge Status */}
-              <div className="flex-1">
-                <OverclockList overclocks={data.overclocks} />
-              </div>
-            </div>
+          {/* Class Grid 2x2 */}
+          <div className="grid grid-cols-2 gap-4">
+            {data.classes.map((classData) => (
+              <ClassCard key={classData.name} classData={classData} />
+            ))}
           </div>
-
           {/* Employee Performance Report */}
           <MissionStats missionStats={data.mission_stats} />
+
+          {/* Forge Status */}
+          <OverclockList overclocks={data.overclocks} />
         </>
       )}
     </div>
