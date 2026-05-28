@@ -4,6 +4,7 @@ import { parseSaveFile } from "@/lib/api";
 import { ApiResponse } from "@/lib/types";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 const tips = [
   "⛏ Drilling through your save file...",
@@ -52,9 +53,10 @@ export default function UploadForm() {
         "dashboardData",
         JSON.stringify(resultRef.current),
       );
+      sessionStorage.setItem("playerName", playerName);
       router.push("/dashboard");
     }
-  }, [apiDone, progress, router]);
+  }, [apiDone, progress, router, playerName]);
 
   async function handleSubmit() {
     if (!playerName || !selectedFile) return;
@@ -64,7 +66,27 @@ export default function UploadForm() {
     // Signaler que l'API a répondu — l'Effect 2 se chargera du redirect
     setApiDone(true);
   }
+  async function handleDemo() {
+    const demoPlayer = process.env.NEXT_PUBLIC_DEMO_PLAYER ?? "poussif";
+    const { data, error } = await supabase
+      .from("players")
+      .select("raw_data")
+      .eq("player_name", demoPlayer)
+      .single();
 
+    if (error || !data?.raw_data) {
+      alert("Données démo non disponibles. Réessaie plus tard.");
+      return;
+    }
+
+    sessionStorage.setItem(
+      "dashboardData",
+      JSON.stringify({ ok: true, data: data.raw_data }),
+    );
+    sessionStorage.setItem("isDemo", "true");
+    sessionStorage.setItem("playerName", demoPlayer);
+    router.push("/dashboard");
+  }
   useEffect(() => {
     if (!isLoading) return;
     const interval = setInterval(() => {
@@ -202,6 +224,23 @@ export default function UploadForm() {
             <div className="absolute inset-0 hazard-stripes opacity-10" />
             <span className="material-symbols-outlined">cloud_upload</span>
             SUBMIT FOR ANALYSIS
+          </button>
+          {/* Séparateur */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-drg-border" />
+            <p className="font-mono text-xs text-on-surface-variant tracking-widest">
+              OR
+            </p>
+            <div className="flex-1 border-t border-drg-border" />
+          </div>
+
+          {/* Bouton démo */}
+          <button
+            type="button"
+            onClick={handleDemo}
+            className="w-full border-2 border-drg-border text-on-surface-variant font-display text-lg tracking-widest py-2 hover:border-drg-orange hover:text-drg-orange transition-colors"
+          >
+            TRY DEMO
           </button>
         </div>
 

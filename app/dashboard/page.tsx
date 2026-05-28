@@ -12,16 +12,18 @@ import { getPrefs } from "@/lib/preferences";
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [selectedStatKey, setSelectedStatKey] = useState<string | null>(null);
-
+  const [isDemo, setIsDemo] = useState(false);
   useEffect(() => {
     const raw = sessionStorage.getItem("dashboardData");
     if (!raw) return;
     const parsed = JSON.parse(raw);
     const dashboardData = parsed.data;
     setData(dashboardData);
-
+    setIsDemo(sessionStorage.getItem("isDemo") === "true");
     async function saveToSupabase() {
-      if (getPrefs().showOnLeaderboard) {
+      const isDemo = sessionStorage.getItem("isDemo") === "true";
+
+      if (getPrefs().showOnLeaderboard && !isDemo) {
         const { error } = await supabase.from("players").upsert(
           {
             player_name: dashboardData.player.name,
@@ -63,6 +65,8 @@ export default function DashboardPage() {
               dashboardData.mission_stats["MS_Drinkable_TotalRoundsOrdered"]
                 ?.total ?? 0,
             ),
+            // Toutes les stats brutes — pour le mode démo et les évolutions futures
+            raw_data: dashboardData,
           },
           { onConflict: "player_name" },
         );
@@ -78,6 +82,15 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background p-6 flex flex-col gap-6">
       {data && (
         <>
+          {isDemo && (
+            <div className="border-l-4 border-drg-orange px-4 py-2 font-mono text-xs text-on-surface-variant tracking-widest flex items-center gap-3 bg-surface-container">
+              <span className="material-symbols-outlined text-drg-orange text-sm">
+                info
+              </span>
+              DEMO — DONNÉES DE {data.player.name.toUpperCase()} · UPLOADEZ
+              VOTRE SAVE POUR VOIR VOS STATS
+            </div>
+          )}
           <HeroStats
             heroStats={data.hero_stats}
             selectedStatKey={selectedStatKey}
