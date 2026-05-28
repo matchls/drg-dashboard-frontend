@@ -34,16 +34,14 @@ export default function AbyssBarGuestbook({ playerName }: Props) {
     e.preventDefault();
     if (!draft.trim()) return;
     setSaving(true);
-    await supabase
-      .from("guestbook")
-      .upsert(
-        {
-          player_name: playerName,
-          message: draft.trim(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "player_name" },
-      );
+    await supabase.from("guestbook").upsert(
+      {
+        player_name: playerName,
+        message: draft.trim(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "player_name" },
+    );
     setSaving(false);
     // Recharger les entrées après soumission
     const { data } = await supabase
@@ -62,7 +60,7 @@ export default function AbyssBarGuestbook({ playerName }: Props) {
           menu_book
         </span>
         <p className="font-display text-xl text-on-surface tracking-widest">
-          LIVRE D'OR
+          {"LIVRE D'OR"}
         </p>
       </div>
 

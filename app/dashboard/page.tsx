@@ -53,6 +53,17 @@ export default function DashboardPage() {
             dashboardData.classes.find(
               (c: { name: string }) => c.name === "Scout",
             )?.missions_completed ?? 0,
+          bartender_tips: Math.floor(
+            dashboardData.mission_stats["MS_BartenderTips"]?.total ?? 0,
+          ),
+          beers_consumed: Math.floor(
+            dashboardData.mission_stats["MS_Drinkable_TotalConsumed"]?.total ??
+              0,
+          ),
+          rounds_ordered: Math.floor(
+            dashboardData.mission_stats["MS_Drinkable_TotalRoundsOrdered"]
+              ?.total ?? 0,
+          ),
         },
         { onConflict: "player_name" },
       );

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardData } from "@/lib/types";
 import AbyssBarGuestbook from "@/components/AbyssBarGuestbook";
+import AbyssBarBadges from "@/components/AbyssBarBadges";
+import AbyssBarHonorRoll from "@/components/AbyssBarHonorRoll";
 
 export default function AbyssBarPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -31,12 +33,11 @@ export default function AbyssBarPage() {
               ABYSS BAR
             </p>
           </div>
+          <AbyssBarHonorRoll />
 
           {/* Badges — issue #11 */}
           <div className="industrial-panel p-6">
-            <p className="font-mono text-xs text-on-surface-variant tracking-widest text-center py-4">
-              BADGES — COMING SOON
-            </p>
+            <AbyssBarBadges data={data} />
           </div>
           {/* Anecdotes — issue #10 */}
           <div className="industrial-panel p-6">
