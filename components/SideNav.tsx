@@ -13,7 +13,6 @@ const navItems = [
     icon: "military_tech",
     active: true,
   },
-  { label: "OPTIONS", href: "/options", icon: "settings", active: true },
 ];
 
 export default function SideNav() {

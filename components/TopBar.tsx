@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function TopBar() {
   const [playerName, setPlayerName] = useState("OPERATIVE");
@@ -18,12 +19,12 @@ export default function TopBar() {
         {playerName}
       </p>
       <div className="flex items-center gap-4 text-on-surface-variant">
-        <span className="material-symbols-outlined cursor-default">
-          notifications
-        </span>
-        <span className="material-symbols-outlined cursor-default">
-          settings
-        </span>
+        <Link
+          href="/options"
+          className="text-on-surface-variant hover:text-drg-orange transition-colors"
+        >
+          <span className="material-symbols-outlined">settings</span>
+        </Link>
       </div>
     </header>
   );
