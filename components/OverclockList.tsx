@@ -108,27 +108,27 @@ export default function OverclockList({ overclocks }: Props) {
               </div>
 
               {/* Grille responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
                 {/* Overclocks forgés */}
                 {forged.map((oc) => (
                   <div
                     key={oc.guid}
-                    className="flex items-center gap-3 bg-surface-container-highest border border-outline p-2"
+                    className="flex items-center gap-2 bg-surface-container-highest border border-outline p-2"
                   >
                     {WEAPON_ICONS[oc.weapon] && (
                       <Image
                         src={WEAPON_ICONS[oc.weapon]}
                         alt={oc.weapon}
-                        width={80}
-                        height={80}
+                        width={48}
+                        height={48}
                         className="opacity-80 flex-shrink-0"
                       />
                     )}
                     <div className="min-w-0">
-                      <p className="font-mono text-sm text-on-surface truncate">
+                      <p className="font-mono text-xs text-on-surface truncate">
                         {translateOverclockName(oc.name, prefs.language)}
                       </p>
-                      <p className="font-mono text-xs text-on-surface-variant truncate">
+                      <p className="font-mono text-xs text-on-surface-variant truncate opacity-60">
                         {oc.weapon}
                       </p>
                     </div>
@@ -139,22 +139,22 @@ export default function OverclockList({ overclocks }: Props) {
                 {unforged.map((oc) => (
                   <div
                     key={oc.guid}
-                    className="flex items-center gap-3 bg-surface-container border border-outline p-2 opacity-40 grayscale"
+                    className="flex items-center gap-2 bg-surface-container border border-outline p-2 opacity-40 grayscale"
                   >
                     {WEAPON_ICONS[oc.weapon] && (
                       <Image
                         src={WEAPON_ICONS[oc.weapon]}
                         alt={oc.weapon}
-                        width={80}
-                        height={80}
+                        width={48}
+                        height={48}
                         className="flex-shrink-0"
                       />
                     )}
                     <div className="min-w-0">
-                      <p className="font-mono text-sm text-on-surface truncate">
+                      <p className="font-mono text-xs text-on-surface truncate">
                         {translateOverclockName(oc.name, prefs.language)}
                       </p>
-                      <p className="font-mono text-xs text-on-surface-variant truncate">
+                      <p className="font-mono text-xs text-on-surface-variant truncate opacity-60">
                         {oc.weapon}
                       </p>
                     </div>
