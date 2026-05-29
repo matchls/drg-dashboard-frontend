@@ -47,12 +47,16 @@ app/
 ├── page.tsx                ← upload du .sav + champ pseudo
 ├── dashboard/
 │   └── page.tsx            ← dashboard joueur (lit sessionStorage + sauvegarde Supabase)
+├── player/
+│   └── [name]/
+│       └── page.tsx        ← profil public d'un joueur (lit raw_data depuis Supabase)
 └── leaderboard/
     └── page.tsx            ← classement public (lit Supabase, triable par colonne)
 
 components/
 ├── UploadForm.tsx          ← formulaire upload, barre de progression, tips DRG
 ├── ClassCard.tsx           ← card stats d'une classe (missions, kills, temps, distance, downs)
+├── ClassPieChart.tsx       ← camembert Recharts par classe (affiché au clic sur HeroStats)
 ├── HeroStats.tsx           ← stats globales en hexagones (style DRG)
 ├── MissionStats.tsx        ← stats de mission filtrées par catégorie (onglets)
 ├── NavBar.tsx              ← navigation Upload / Profil / Leaderboard
@@ -60,6 +64,7 @@ components/
 
 lib/
 ├── api.ts                  ← appel POST /api/parse vers le backend
+├── i18n.ts                 ← hook useTranslation() + dictionnaire FR/EN
 ├── supabase.ts             ← client Supabase partagé (instancié une seule fois)
 ├── types.ts                ← types TypeScript partagés (DashboardData, ClassSummary, etc.)
 └── weaponIcons.ts          ← mapping nom d'arme → chemin de l'icône
@@ -95,6 +100,36 @@ Scout    : #4a8fd4  (bleu)
 ```
 
 ⚠️ Les icônes de perks sont **blanches sur fond transparent** — le fond doit rester sombre.
+
+---
+
+## i18n
+
+- Hook : `const t = useTranslation()` dans les composants React
+- Les fonctions **hors composant** ne peuvent pas appeler un hook — passer `t` en paramètre : `function fn(x, t: (key: TranslationKey) => string)`
+- Nouvelles clés à ajouter dans les deux blocs `en` et `fr` de `lib/i18n.ts`
+- Les unités (KM, MI) et noms propres DRG ne se traduisent pas
+- Réutiliser les clés existantes plutôt qu'en créer des doublons (`catMissions`, `catKills`, `downs`, etc.)
+
+---
+
+## Recharts (ClassPieChart)
+
+- N'accepte pas les classes Tailwind — utiliser les valeurs hex directement pour les styles inline
+- Supprimer la bordure blanche entre segments : prop `stroke="none"` sur `<Pie>`
+- Styler le tooltip : props `contentStyle` et `itemStyle` sur `<Tooltip>` (fond `#1e1208`, bordure `#3d2a0f`, texte `#e8a320`)
+
+---
+
+## Table Supabase `players` — colonnes disponibles
+
+Stats globales : `total_missions`, `total_kills`, `total_time_s`, `total_distance_cm`, `total_downs`, `total_minerals`, `perk_points`
+Par classe (préfixe `driller_` / `gunner_` / `engineer_` / `scout_`) : `_missions`, `_kills`, `_time_s`, `_distance_cm`, `_downs`
+Overclocks : `forged_overclocks`, `unforged_overclocks`
+Abyss Bar : `bartender_tips`, `beers_consumed`, `rounds_ordered`
+JSON complet : `raw_data` (type `DashboardData`)
+
+⚠️ Ne jamais faire `.select("*")` sur cette table — `raw_data` est lourd. Toujours sélectionner les colonnes utiles.
 
 ---
 
@@ -134,25 +169,24 @@ npm run lint     # vérification TypeScript/ESLint
 ### Ce qui fonctionne ✅
 
 - Upload `.sav` → appel backend → affichage dashboard
-- Sauvegarde Supabase après upload (upsert sur `player_name`)
-- `/dashboard` : hero stats, cards par classe, overclocks avec icônes d'armes, mission stats par catégorie
-- `/leaderboard` : tableau triable (temps, missions, kills, distance, downs)
+- Sauvegarde Supabase après upload (upsert sur `player_name`, toutes les stats par classe)
+- `/dashboard` : hero stats cliquables, camembert par classe (Recharts), cards par classe, overclocks filtrables par classe, mission stats par catégorie
+- `/leaderboard` : tableau triable par colonne (▲/▼), colonne classe favorite colorée, lignes cliquables → profil joueur
+- `/player/[name]` : page profil publique chargée depuis `raw_data` Supabase
+- Leaderboard : Company Quota (top 5 proportionnel) et Bounty Targets (agrégats communautaires) avec vraies données
+- i18n FR/EN sur tous les labels (leaderboard, HeroStats, dashboard)
 - Navbar avec page active en orange
-- Police Barlow Condensed
-- Unités distance (km) et temps (h min) dans Mission Stats
+- Unités distance (km/mi) et temps (h/d+h) selon préférences
 
 ### Ce qui reste à faire 🔜
 
-**Design (priorité actuelle)**
+**Design**
 - Coins biseautés (`clip-path`) sur les cards de classe et overclocks — style hexagonal DRG
 - Séparateurs horizontaux oranges entre les sections
 - Cohérence des majuscules sur tous les labels
 
 **Dashboard — fonctionnalités**
-- Réordonner : Mission Stats avant Overclocks
-- Camembert par stat de classe (clic sur une stat → camembert coloré par classe avec Recharts)
-- Filtre par classe dans la section Overclocks (boutons Driller / Gunner / Engineer / Scout)
-- Nombre d'overclocks forgés par classe dans le header de la section
+- Nombre d'overclocks forgés par classe dans le header de la section OverclockList
 
 **Assets**
 - Icônes de minerais dans les stats Mining
