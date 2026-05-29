@@ -58,7 +58,14 @@ const STAT_NAMES_FR: Record<string, string> = {
   "Swarmageddon":           "Swarmagedon",
 
   // ── Kills ─────────────────────────────────────────────────────────────────
-  "Total Enemies": "Ennemis éliminés",
+  "Total Enemies":       "Ennemis éliminés",
+  // Labels hero stats (format backend avec unité — utilisés dans ClassPieChart)
+  "Total Enemies Killed":     "Ennemis éliminés",
+  "Total Missions":           "Missions totales",
+  "Time Played (s)":          "Temps joué",
+  "Distance Travelled (cm)":  "Distance parcourue",
+  "Total Downs":              "Fois mis à terre",
+  "Total Minerals Mined":     "Minéraux extraits",
 
   // ── Deaths ────────────────────────────────────────────────────────────────
   "Total Downs":       "Fois mis à terre",
