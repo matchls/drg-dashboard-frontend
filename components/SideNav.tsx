@@ -2,28 +2,28 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const navItems = [
-  { label: "TERMINAL", href: "/", icon: "terminal", active: true },
-  { label: "MISSION CONTROL", href: "/dashboard", icon: "radar", active: true },
-  { label: "ABYSS BAR", href: "/abyss-bar", icon: "local_bar", active: true },
-  {
-    label: "MEMORIAL",
-    href: "/leaderboard",
-    icon: "military_tech",
-    active: true,
-  },
-];
+import { useTranslation } from "@/lib/i18n";
 
 export default function SideNav() {
   const pathname = usePathname();
+  const t = useTranslation();
   const [playerName, setPlayerName] = useState("DEEP ROCK GALACTIC");
+
+  // navItems est défini ici car il utilise t() pour les labels traduits
+  const navItems = [
+    { label: t("navTerminal"),       href: "/",          icon: "terminal",      active: true },
+    { label: t("navMissionControl"), href: "/dashboard", icon: "radar",         active: true },
+    { label: t("navAbyssBar"),       href: "/abyss-bar", icon: "local_bar",     active: true },
+    { label: t("navMemorial"),       href: "/leaderboard", icon: "military_tech", active: true },
+  ];
 
   useEffect(() => {
     const data = sessionStorage.getItem("dashboardData");
     if (data) {
       const parsed = JSON.parse(data);
-      setPlayerName(parsed.player?.name ?? "DEEP ROCK GALACTIC");
+      // La session stocke l'objet ApiResponse complet → { data: DashboardData, ... }
+      // Il faut descendre dans .data.player.name, pas directement .player.name
+      setPlayerName(parsed.data?.player?.name ?? "DEEP ROCK GALACTIC");
     }
   }, []);
 
@@ -32,7 +32,7 @@ export default function SideNav() {
       {/* Header */}
       <div className="p-6 border-b-4 border-outline">
         <p className="text-xs tracking-[0.3em] text-on-surface-variant uppercase">
-          Space Rig Profile
+          {t("navSpaceRigProfile")}
         </p>
         <p className="font-display text-2xl text-primary truncate">
           {playerName}
@@ -45,7 +45,7 @@ export default function SideNav() {
           const isActive = pathname === item.href;
           return (
             <Link
-              key={item.label}
+              key={item.href}
               href={item.active ? item.href : "#"}
               onClick={!item.active ? (e) => e.preventDefault() : undefined}
               className={`flex items-center gap-3 px-6 py-3 transition-colors
@@ -68,13 +68,13 @@ export default function SideNav() {
         })}
       </nav>
 
-      {/* Footer button */}
+      {/* Bouton bas de page */}
       <div className="p-4 border-t-4 border-outline">
         <Link
           href="/"
           className="block w-full bg-primary text-on-primary text-center font-display text-lg py-2 tracking-widest hover:bg-primary-fixed transition-colors"
         >
-          START MISSION
+          {t("navStartMission")}
         </Link>
       </div>
     </aside>

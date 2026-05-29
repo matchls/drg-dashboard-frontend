@@ -109,7 +109,7 @@ export default function QuoteTypewriter() {
 
   return (
     // overflow-hidden nécessaire pour que le slide-out ne déborde pas du header
-    <div className="flex-1 overflow-hidden mx-8 flex justify-center">
+    <div className="flex-1 min-w-0 overflow-hidden mx-8 flex justify-center">
       <div
         // transition uniquement pendant la sortie — le retour à la position initiale est instantané
         className={
@@ -117,7 +117,7 @@ export default function QuoteTypewriter() {
         }
         style={{ transform: exiting ? "translateX(110%)" : "translateX(0)" }}
       >
-        <p className="font-mono text-xs text-drg-orange tracking-widest whitespace-nowrap">
+        <p className="font-mono text-s text-drg-orange tracking-widest whitespace-nowrap">
           {/* Guillemet ouvrant fixe */}
           &ldquo;
           {/* Texte tapé caractère par caractère */}

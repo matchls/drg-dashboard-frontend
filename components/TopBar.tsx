@@ -18,7 +18,7 @@ export default function TopBar() {
   return (
     <header className="h-14 bg-surface-container-high border-b-4 border-outline flex items-center px-6 gap-4">
       {/* Nom du joueur — fixe à gauche */}
-      <p className="font-display text-xl text-on-surface tracking-widest shrink-0">
+      <p className="font-display text-3xl text-on-surface tracking-widest shrink-0">
         {playerName}
       </p>
 

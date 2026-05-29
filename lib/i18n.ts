@@ -83,6 +83,14 @@ const translations = {
     lbCriticalSlacker: "CRITICAL SLACKER",
     lbSyncing: "SYNCING WITH MISSION CONTROL... [OK]",
     lbWarning: "⚠ SLACKERS WILL BE PROCESSED FOR LEAF-LOVER JUICE.",
+
+    // --- SideNav ---
+    navTerminal: "TERMINAL",
+    navMissionControl: "MISSION CONTROL",
+    navAbyssBar: "ABYSS BAR",
+    navMemorial: "MEMORIAL",
+    navStartMission: "START MISSION",
+    navSpaceRigProfile: "Space Rig Profile",
   },
 
   fr: {
@@ -171,6 +179,14 @@ const translations = {
     lbCriticalSlacker: "FAINÉANT CRITIQUE",
     lbSyncing: "SYNCHRONISATION AVEC LE CONTRÔLE DE MISSION... [OK]",
     lbWarning: "⚠ LES FAINÉANTS SERONT TRANSFORMÉS EN JUS DE LEAF-LOVER.",
+
+    // --- SideNav ---
+    navTerminal: "TERMINAL",
+    navMissionControl: "RAPPORT DE MISSION",
+    navAbyssBar: "ABYSS BAR",
+    navMemorial: "MÉMORIAL",
+    navStartMission: "LANCER UNE MISSION",
+    navSpaceRigProfile: "Profil de la plateforme",
   },
 } as const;
 

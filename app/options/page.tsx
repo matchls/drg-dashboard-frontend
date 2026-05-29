@@ -54,15 +54,14 @@ export default function OptionsPage() {
               onClick={() =>
                 update({ showOnLeaderboard: !prefs.showOnLeaderboard })
               }
-              className={`w-12 h-6 border-2 transition-colors relative ${
-                prefs.showOnLeaderboard
-                  ? "bg-drg-orange border-drg-orange"
-                  : "bg-transparent border-drg-border"
-              }`}
+              className="w-12 h-6 border-2 border-drg-border bg-surface-container relative overflow-hidden p-0"
             >
+              {/* Curseur : gris à gauche = off, orange à droite = on */}
               <span
-                className={`absolute top-0.5 w-4 h-4 bg-on-primary transition-transform ${
-                  prefs.showOnLeaderboard ? "translate-x-6" : "translate-x-0.5"
+                className={`absolute top-1 w-4 h-4 transition-all duration-200 ${
+                  prefs.showOnLeaderboard
+                    ? "translate-x-1 bg-drg-orange"
+                    : "-translate-x-5 bg-on-surface-variant"
                 }`}
               />
             </button>
