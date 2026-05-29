@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useTranslation, TranslationKey } from "@/lib/i18n";
+import { ClassName, CLASS_COLORS } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 interface PlayerRow {
   player_name: string;
@@ -9,31 +12,37 @@ interface PlayerRow {
   total_time_s: number;
   total_distance_cm: number;
   total_downs: number;
+  total_minerals: number;
+  driller_missions: number;
+  gunner_missions: number;
+  engineer_missions: number;
+  scout_missions: number;
 }
 
 // Calcule le badge de statut selon le nombre de missions
-function getStatusBadge(missions: number): {
-  label: string;
-  className: string;
-} {
+// t est passé en paramètre car cette fonction est en dehors du composant (ne peut pas appeler un hook directement)
+function getStatusBadge(
+  missions: number,
+  t: (key: TranslationKey) => string,
+): { label: string; className: string } {
   if (missions >= 2000)
     return {
-      label: "LEGENDARY",
+      label: t("lbLegendary"),
       className: "bg-primary text-on-primary px-2 py-0.5",
     };
   if (missions >= 500)
     return {
-      label: "PRODUCTIVE",
+      label: t("lbProductive"),
       className: "border border-tertiary text-tertiary px-2 py-0.5",
     };
   if (missions >= 100)
     return {
-      label: "ADEQUATE",
+      label: t("lbAdequate"),
       className:
         "border border-outline-variant text-on-surface-variant px-2 py-0.5",
     };
   return {
-    label: "CRITICAL SLACKER",
+    label: t("lbCriticalSlacker"),
     className: "border border-error text-error px-2 py-0.5",
   };
 }
@@ -46,20 +55,37 @@ function getPodiumStyle(rank: number): string {
   return "border-[#A52A2A] bg-[#A52A2A]/10";
 }
 
+// Trouve la classe avec le plus de missions pour un joueur
+// reduce : parcourt le tableau en gardant le "meilleur" à chaque étape
+function getBestClass(player: PlayerRow): ClassName {
+  const scores: [ClassName, number][] = [
+    ["Driller", player.driller_missions],
+    ["Gunner", player.gunner_missions],
+    ["Engineer", player.engineer_missions],
+    ["Scout", player.scout_missions],
+  ];
+  return scores.reduce((best, current) =>
+    current[1] > best[1] ? current : best,
+  )[0];
+}
+
+// Les colonnes sur lesquelles on peut trier
+type SortKey =
+  | "total_missions"
+  | "total_kills"
+  | "total_time_s"
+  | "total_distance_cm"
+  | "total_downs";
+
 export default function LeaderboardPage() {
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [currentPlayerName, setCurrentPlayerName] = useState<string | null>(
     null,
   );
-  const [clock, setClock] = useState("");
-
-  // Horloge live — mise à jour chaque seconde
-  useEffect(() => {
-    const tick = () => setClock(new Date().toLocaleTimeString("fr-FR"));
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const [sortKey, setSortKey] = useState<SortKey>("total_missions");
+  const [sortAsc, setSortAsc] = useState(false); // false = décroissant par défaut (les meilleurs en premier)
+  const t = useTranslation();
+  const router = useRouter();
 
   // Nom du joueur connecté depuis sessionStorage
   useEffect(() => {
@@ -76,7 +102,7 @@ export default function LeaderboardPage() {
       const { data, error } = await supabase
         .from("players")
         .select(
-          "player_name, total_missions, total_kills, total_time_s, total_distance_cm, total_downs",
+          "player_name, total_missions, total_kills, total_time_s, total_distance_cm, total_downs, total_minerals, driller_missions, gunner_missions, engineer_missions, scout_missions",
         )
         .order("total_missions", { ascending: false });
       if (error) console.error(error);
@@ -85,13 +111,30 @@ export default function LeaderboardPage() {
     fetchPlayers();
   }, []);
 
+  // Fonction appelée quand on clique sur un en-tête de colonne
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortAsc((prev) => !prev); // même colonne → inverse la direction
+    } else {
+      setSortKey(key);
+      setSortAsc(false); // nouvelle colonne → repart en décroissant
+    }
+  }
+
+  // Copie triée — le [...] est important : on ne mute jamais le state directement
+  const sortedPlayers = [...players].sort((a, b) => {
+    const diff = a[sortKey] - b[sortKey];
+    return sortAsc ? diff : -diff;
+  });
+
   const top3 = players.slice(0, 3);
+
   return (
     <div className="min-h-screen bg-background scanline-overlay p-6 flex flex-col gap-6">
       {/* Podium Top 3 */}
       <div className="flex gap-4 justify-center">
         {top3.map((player, i) => {
-          const badge = getStatusBadge(player.total_missions);
+          const badge = getStatusBadge(player.total_missions, t);
           return (
             <div
               key={player.player_name}
@@ -129,7 +172,7 @@ export default function LeaderboardPage() {
             COMPANY SPREADSHEET V.2.04
           </p>
           <p className="font-mono text-xs text-primary animate-pulse">
-            SYNCING WITH MISSION CONTROL... [OK]
+            {t("lbSyncing")}
           </p>
         </div>
 
@@ -137,23 +180,65 @@ export default function LeaderboardPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b-4 border-outline text-on-surface-variant font-mono text-xs tracking-widest uppercase">
-                <th className="p-4 text-left">Rank</th>
-                <th className="p-4 text-left">Miner Name</th>
-                <th className="p-4 text-right">Missions</th>
-                <th className="p-4 text-right">Kills</th>
-                <th className="p-4 text-right">Minerals</th>
-                <th className="p-4 text-left">Status</th>
+                <th className="p-4 text-left">{t("lbRank")}</th>
+                <th className="p-4 text-left">{t("lbMinerName")}</th>
+                <th
+                  className="p-4 text-right cursor-pointer select-none hover:text-on-surface"
+                  onClick={() => handleSort("total_missions")}
+                >
+                  {t("catMissions")}{" "}
+                  {sortKey === "total_missions" ? (sortAsc ? "▲" : "▼") : ""}
+                </th>
+                <th
+                  className="p-4 text-right cursor-pointer select-none hover:text-on-surface"
+                  onClick={() => handleSort("total_kills")}
+                >
+                  {t("catKills")}{" "}
+                  {sortKey === "total_kills" ? (sortAsc ? "▲" : "▼") : ""}
+                </th>
+                <th
+                  className="p-4 text-right cursor-pointer select-none hover:text-on-surface"
+                  onClick={() => handleSort("total_time_s")}
+                >
+                  {t("timeFormatHours")}{" "}
+                  {sortKey === "total_time_s" ? (sortAsc ? "▲" : "▼") : ""}
+                </th>
+                <th
+                  className="p-4 text-right cursor-pointer select-none hover:text-on-surface"
+                  onClick={() => handleSort("total_distance_cm")}
+                >
+                  {t("distanceLabel")}{" "}
+                  {sortKey === "total_distance_cm" ? (sortAsc ? "▲" : "▼") : ""}
+                </th>
+                <th
+                  className="p-4 text-right cursor-pointer select-none hover:text-on-surface"
+                  onClick={() => handleSort("total_downs")}
+                >
+                  {t("downs")}{" "}
+                  {sortKey === "total_downs" ? (sortAsc ? "▲" : "▼") : ""}
+                </th>
+                <th className="p-4 text-left">{t("lbStatus")}</th>
+                <th className="p-4 text-left">{t("lbBestClass")}</th>
               </tr>
             </thead>
             <tbody>
-              {players.map((player, index) => {
+              {sortedPlayers.map((player, index) => {
                 const isCurrentPlayer =
                   player.player_name === currentPlayerName;
-                const badge = getStatusBadge(player.total_missions);
+                const badge = getStatusBadge(player.total_missions, t);
+                // Convertit les secondes en heures (arrondi à 1 décimale)
+                const hours = (player.total_time_s / 3600).toFixed(1);
+                // Convertit les centimètres en kilomètres (arrondi à 1 décimale)
+                const km = (player.total_distance_cm / 100000).toFixed(1);
                 return (
                   <tr
                     key={player.player_name}
-                    className={`border-b border-outline transition-colors hover:bg-surface-container-high
+                    onClick={() =>
+                      router.push(
+                        `/player/${encodeURIComponent(player.player_name)}`,
+                      )
+                    }
+                    className={`border-b border-outline transition-colors cursor-pointer hover:bg-surface-container-high
                       ${isCurrentPlayer ? "bg-primary/5 text-primary" : "text-on-surface"}
                     `}
                   >
@@ -175,7 +260,11 @@ export default function LeaderboardPage() {
                       {player.total_kills.toLocaleString()}
                     </td>
                     <td className="p-4 font-mono text-sm text-right">
-                      {player.total_distance_cm.toLocaleString()}
+                      {hours}h
+                    </td>
+                    <td className="p-4 font-mono text-sm text-right">{km}km</td>
+                    <td className="p-4 font-mono text-sm text-right">
+                      {player.total_downs.toLocaleString()}
                     </td>
                     <td className="p-4">
                       <span
@@ -184,31 +273,39 @@ export default function LeaderboardPage() {
                         {badge.label}
                       </span>
                     </td>
+                    <td className="p-4">
+                      {(() => {
+                        const bestClass = getBestClass(player);
+                        return (
+                          <span
+                            className="font-mono text-xs tracking-widest px-2 py-0.5 border"
+                            style={{
+                              color: CLASS_COLORS[bestClass],
+                              borderColor: CLASS_COLORS[bestClass],
+                            }}
+                          >
+                            {bestClass.toUpperCase()}
+                          </span>
+                        );
+                      })()}
+                    </td>
                   </tr>
                 );
               })}
               {/* Avertissement final */}
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={9}
                   className="p-4 font-mono text-xs text-error text-center tracking-widest"
                 >
-                  ⚠ SLACKERS WILL BE PROCESSED FOR LEAF-LOVER JUICE.
+                  {t("lbWarning")}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <div className="p-4 border-t-4 border-outline flex gap-4">
-          <button className="border-4 border-outline text-on-surface-variant font-mono text-xs px-4 py-2 tracking-widest hover:bg-surface-container-high">
-            PAGE UP
-          </button>
-          <button className="border-4 border-outline text-on-surface-variant font-mono text-xs px-4 py-2 tracking-widest hover:bg-surface-container-high">
-            PAGE DOWN
-          </button>
-        </div>
       </div>
+
       {/* Sections placeholder */}
       <div className="grid grid-cols-2 gap-4">
         {/* Company Quota Fulfillment */}
@@ -255,17 +352,6 @@ export default function LeaderboardPage() {
           ))}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-surface-container border-t-4 border-outline flex items-center justify-between px-6 py-3">
-        <p className="font-mono text-xs text-on-surface-variant tracking-widest">
-          TERMINAL_ID: CR0-4 | OS: DRG_MAINFRAME_V4.2
-        </p>
-        <div className="flex items-center gap-4 font-mono text-xs text-on-surface-variant">
-          <span>DEEP ROCK GALACTIC: WE DIG IT.</span>
-          <span className="text-primary">{clock}</span>
-        </div>
-      </footer>
     </div>
   );
 }

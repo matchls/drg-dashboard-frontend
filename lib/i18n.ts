@@ -70,6 +70,19 @@ const translations = {
     toDetail: "TO DETAIL IT",
     allClasses: "ALL",
     downs: "DOWNS",
+    minerals: "MINERALS",
+
+    // --- Leaderboard ---
+    lbRank: "RANK",
+    lbMinerName: "MINER NAME",
+    lbStatus: "STATUS",
+    lbBestClass: "BEST CLASS",
+    lbLegendary: "LEGENDARY",
+    lbProductive: "PRODUCTIVE",
+    lbAdequate: "ADEQUATE",
+    lbCriticalSlacker: "CRITICAL SLACKER",
+    lbSyncing: "SYNCING WITH MISSION CONTROL... [OK]",
+    lbWarning: "⚠ SLACKERS WILL BE PROCESSED FOR LEAF-LOVER JUICE.",
   },
 
   fr: {
@@ -132,7 +145,7 @@ const translations = {
 
     // --- OverclockList ---
     forgeStatus: "STATUT DE LA FORGE",
-    forged: "FORGÉ",
+    forged: "FORGÉS",
     totalForged: "TOTAL FORGÉ",
     // --- Options ---
     languageLabel: "LANGUE",
@@ -145,6 +158,19 @@ const translations = {
     toDetail: "POUR LA DÉTAILLER",
     allClasses: "TOUTES",
     downs: "MORTS",
+    minerals: "MINERAIS",
+
+    // --- Leaderboard ---
+    lbRank: "RANG",
+    lbMinerName: "NOM DU MINEUR",
+    lbStatus: "STATUT",
+    lbBestClass: "CLASSE FAVORITE",
+    lbLegendary: "LÉGENDAIRE",
+    lbProductive: "PRODUCTIF",
+    lbAdequate: "CONVENABLE",
+    lbCriticalSlacker: "FAINÉANT CRITIQUE",
+    lbSyncing: "SYNCHRONISATION AVEC LE CONTRÔLE DE MISSION... [OK]",
+    lbWarning: "⚠ LES FAINÉANTS SERONT TRANSFORMÉS EN JUS DE LEAF-LOVER.",
   },
 } as const;
 
