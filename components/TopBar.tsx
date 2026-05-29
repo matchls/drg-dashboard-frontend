@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import QuoteTypewriter from "@/components/QuoteTypewriter";
 
 export default function TopBar() {
   const [playerName, setPlayerName] = useState("OPERATIVE");
@@ -14,11 +15,17 @@ export default function TopBar() {
   }, []);
 
   return (
-    <header className="h-14 bg-surface-container-high border-b-4 border-outline flex items-center justify-between px-6">
-      <p className="font-display text-xl text-on-surface tracking-widest">
+    <header className="h-14 bg-surface-container-high border-b-4 border-outline flex items-center px-6 gap-4">
+      {/* Nom du joueur — fixe à gauche */}
+      <p className="font-display text-xl text-on-surface tracking-widest shrink-0">
         {playerName}
       </p>
-      <div className="flex items-center gap-4 text-on-surface-variant">
+
+      {/* Citation animée — prend tout l'espace central */}
+      <QuoteTypewriter />
+
+      {/* Settings — fixe à droite */}
+      <div className="shrink-0">
         <Link
           href="/options"
           className="text-on-surface-variant hover:text-drg-orange transition-colors"
