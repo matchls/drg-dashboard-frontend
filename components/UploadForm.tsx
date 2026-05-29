@@ -18,6 +18,7 @@ export default function UploadForm() {
   // apiDone passe à true quand le backend a répondu
   const [apiDone, setApiDone] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
 
   // Tips traduits — recalculés si la langue change
@@ -51,7 +52,19 @@ export default function UploadForm() {
   }, [apiDone, progress, router, playerName]);
 
   async function handleSubmit() {
-    if (!playerName || !selectedFile) return;
+    if (!playerName && !selectedFile) {
+      setFormError("⚠ ENTER YOUR OPERATIVE ID AND SELECT A SAVE FILE.");
+      return;
+    }
+    if (!playerName) {
+      setFormError("⚠ ENTER YOUR OPERATIVE ID.");
+      return;
+    }
+    if (!selectedFile) {
+      setFormError("⚠ SELECT A SAVE FILE.");
+      return;
+    }
+    setFormError(null);
     setIsLoading(true);
     const response = await parseSaveFile(selectedFile, playerName);
     resultRef.current = response;
@@ -207,6 +220,13 @@ export default function UploadForm() {
               {t("warning")}
             </p>
           </div>
+
+          {/* Message d'erreur validation */}
+          {formError && (
+            <p className="font-mono text-xs text-error tracking-widest text-center">
+              {formError}
+            </p>
+          )}
 
           {/* Bouton submit */}
           <button

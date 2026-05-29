@@ -96,7 +96,8 @@ export default function LeaderboardPage() {
     const data = sessionStorage.getItem("dashboardData");
     if (data) {
       const parsed = JSON.parse(data);
-      setCurrentPlayerName(parsed.player?.name ?? null);
+      // sessionStorage contient un ApiResponse : { ok, data: DashboardData }
+      setCurrentPlayerName(parsed.data?.player?.name ?? null);
     }
   }, []);
 

@@ -10,7 +10,8 @@ export default function TopBar() {
     const data = sessionStorage.getItem("dashboardData");
     if (data) {
       const parsed = JSON.parse(data);
-      setPlayerName(parsed.player?.name ?? "OPERATIVE");
+      // sessionStorage contient un ApiResponse : { ok, data: DashboardData }
+      setPlayerName(parsed.data?.player?.name ?? "OPERATIVE");
     }
   }, []);
 
