@@ -50,7 +50,7 @@ const QUOTES = [
 // 3 phases : frappe → attente → sortie → frappe suivante
 type Phase = "typing" | "waiting" | "exiting";
 
-const TYPING_SPEED_MS = 100; // délai entre chaque caractère
+const TYPING_SPEED_MS = 60; // délai entre chaque caractère
 const DISPLAY_DURATION_MS = 5000; // durée d'affichage après frappe complète
 const EXIT_DURATION_MS = 700; // durée de la transition de sortie — doit correspondre au duration-[Xms] dans le JSX
 
@@ -110,13 +110,13 @@ export default function QuoteTypewriter() {
   return (
     // overflow-hidden nécessaire pour que le slide-out ne déborde pas du header
 
-    <div className="flex-1 min-w-0 overflow-hidden mx-8 flex justify-center">
+    <div className="flex-1 min-w-0 overflow-hidden flex justify-start">
       <div
         // transition uniquement pendant la sortie — le retour à la position initiale est instantané
         className={
           exiting ? "transition-transform ease-in duration-[700ms]" : ""
         }
-        style={{ transform: exiting ? "translateX(110%)" : "translateX(0)" }}
+        style={{ transform: exiting ? "translateX(100vw)" : "translateX(0)" }}
       >
         <p className="font-mono text-s text-drg-orange tracking-widest whitespace-nowrap">
           {/* Guillemet ouvrant fixe */}

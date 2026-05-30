@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { useTranslation, TranslationKey } from "@/lib/i18n";
 import { ClassName, CLASS_COLORS } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { getFriends, addFriend, removeFriend, isFriend } from "@/lib/friends";
 
 interface PlayerRow {
   player_name: string;
@@ -87,7 +89,10 @@ export default function LeaderboardPage() {
     null,
   );
   const [sortKey, setSortKey] = useState<SortKey>("total_missions");
-  const [sortAsc, setSortAsc] = useState(false); // false = décroissant par défaut (les meilleurs en premier)
+  const [sortAsc, setSortAsc] = useState(false);
+  const [friendsOnly, setFriendsOnly] = useState(false);
+  // friends est un state React pour forcer le re-render quand on ajoute/retire un ami
+  const [friends, setFriends] = useState<string[]>([]);
   const t = useTranslation();
   const router = useRouter();
 
@@ -96,9 +101,10 @@ export default function LeaderboardPage() {
     const data = sessionStorage.getItem("dashboardData");
     if (data) {
       const parsed = JSON.parse(data);
-      // sessionStorage contient un ApiResponse : { ok, data: DashboardData }
       setCurrentPlayerName(parsed.data?.player?.name ?? null);
     }
+    // Charge la liste d'amis depuis localStorage au montage
+    setFriends(getFriends());
   }, []);
 
   // Fetch Supabase — trié par missions
@@ -126,17 +132,36 @@ export default function LeaderboardPage() {
     }
   }
 
-  // Copie triée — le [...] est important : on ne mute jamais le state directement
+  // Ajoute ou retire un ami — met à jour localStorage ET le state React (pour re-render)
+  function toggleFriend(name: string) {
+    if (isFriend(name)) {
+      removeFriend(name);
+    } else {
+      addFriend(name);
+    }
+    setFriends(getFriends()); // sync le state avec localStorage
+  }
+
+  // Copie triée
   const sortedPlayers = [...players].sort((a, b) => {
     const diff = a[sortKey] - b[sortKey];
     return sortAsc ? diff : -diff;
   });
 
+  // Filtre "amis seulement" : toi + tes amis
+  const displayedPlayers = friendsOnly
+    ? sortedPlayers.filter(
+        (p) =>
+          p.player_name.toUpperCase() === currentPlayerName?.toUpperCase() ||
+          friends.includes(p.player_name.toUpperCase()),
+      )
+    : sortedPlayers;
+
   const top3 = players.slice(0, 3);
 
-  // Company Quota : top 5 joueurs, barres proportionnelles au leader
-  const top5 = players.slice(0, 5);
-  const leaderMissions = top5[0]?.total_missions ?? 1; // ?? 1 évite la division par zéro
+  // Company Quota : top 5 selon la stat active (suit le tri du tableau)
+  const top5 = sortedPlayers.slice(0, 5);
+  const leaderValue = top5[0]?.[sortKey] ?? 1; // ?? 1 évite la division par zéro
 
   // Bounty Targets : somme communautaire de tous les joueurs
   const communityKills    = players.reduce((sum, p) => sum + p.total_kills, 0);
@@ -184,6 +209,29 @@ export default function LeaderboardPage() {
           <p className="font-display text-xl text-on-surface tracking-widest flex-1">
             COMPANY SPREADSHEET V.2.04
           </p>
+          {/* Toggle Tous / Amis */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => setFriendsOnly(false)}
+              className={`font-mono text-xs tracking-widest px-3 py-1 border-2 transition-colors ${
+                !friendsOnly
+                  ? "bg-primary text-on-primary border-primary"
+                  : "border-outline text-on-surface-variant hover:border-drg-orange"
+              }`}
+            >
+              {t("lbAllPlayers")}
+            </button>
+            <button
+              onClick={() => setFriendsOnly(true)}
+              className={`font-mono text-xs tracking-widest px-3 py-1 border-2 transition-colors ${
+                friendsOnly
+                  ? "bg-primary text-on-primary border-primary"
+                  : "border-outline text-on-surface-variant hover:border-drg-orange"
+              }`}
+            >
+              {t("lbFriendsOnly")}
+            </button>
+          </div>
           <p className="font-mono text-xs text-primary animate-pulse">
             {t("lbSyncing")}
           </p>
@@ -232,10 +280,11 @@ export default function LeaderboardPage() {
                 </th>
                 <th className="p-4 text-left">{t("lbStatus")}</th>
                 <th className="p-4 text-left">{t("lbBestClass")}</th>
+                <th className="p-4 text-center">{t("lbFriend")}</th>
               </tr>
             </thead>
             <tbody>
-              {sortedPlayers.map((player, index) => {
+              {displayedPlayers.map((player, index) => {
                 const isCurrentPlayer =
                   player.player_name === currentPlayerName;
                 const badge = getStatusBadge(player.total_missions, t);
@@ -302,13 +351,46 @@ export default function LeaderboardPage() {
                         );
                       })()}
                     </td>
+                    {/* Bouton ami — stopPropagation pour ne pas naviguer vers le profil */}
+                    <td className="p-4 text-center">
+                      {!isCurrentPlayer && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFriend(player.player_name);
+                          }}
+                          title={friends.includes(player.player_name.toUpperCase()) ? "Retirer des amis" : "Ajouter aux amis"}
+                          className="hover:scale-125 transition-transform inline-flex items-center justify-center"
+                        >
+                          <Image
+                            src="/icons/misc/icon_accessory.png"
+                            alt="ami"
+                            width={20}
+                            height={20}
+                            className={`transition-opacity ${
+                              friends.includes(player.player_name.toUpperCase())
+                                ? "opacity-100"
+                                : "opacity-20 grayscale"
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
+              {/* Message si aucun ami en mode "amis seulement" */}
+              {friendsOnly && displayedPlayers.length === 0 && (
+                <tr>
+                  <td colSpan={10} className="p-8 font-mono text-xs text-on-surface-variant text-center tracking-widest">
+                    {t("lbNoFriends")}
+                  </td>
+                </tr>
+              )}
               {/* Avertissement final */}
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={10}
                   className="p-4 font-mono text-xs text-error text-center tracking-widest"
                 >
                   {t("lbWarning")}
@@ -322,32 +404,49 @@ export default function LeaderboardPage() {
       <div className="grid grid-cols-2 gap-4">
         {/* Company Quota Fulfillment — top 5 joueurs, proportionnel au leader */}
         <div className="industrial-panel p-4 flex flex-col gap-4">
-          <p className="font-display text-lg text-on-surface tracking-widest">
-            COMPANY QUOTA FULFILLMENT
-          </p>
-          <div className="flex items-end gap-2 h-24">
-            {top5.map((player) => {
-              const pct = Math.round((player.total_missions / leaderMissions) * 100);
-              // Initiales : première lettre de chaque mot, max 3 caractères
-              const initials = player.player_name
-                .split(" ")
-                .map((word) => word[0]?.toUpperCase() ?? "")
-                .join("")
-                .slice(0, 3);
-              return (
-                <div key={player.player_name} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full bg-primary/20 border border-primary/40 relative h-full">
-                    <div
-                      className="bg-primary absolute bottom-0 w-full transition-all"
-                      style={{ height: `${pct}%` }}
-                    />
+          <div className="flex items-baseline gap-3">
+            <p className="font-display text-lg text-on-surface tracking-widest">
+              COMPANY QUOTA FULFILLMENT
+            </p>
+            <p className="font-mono text-xs text-primary tracking-widest">
+              — {sortKey === "total_missions"    ? t("catMissions")
+                : sortKey === "total_kills"      ? t("catKills")
+                : sortKey === "total_time_s"     ? t("timeFormatHours")
+                : sortKey === "total_distance_cm"? t("distanceLabel")
+                : t("downs")}
+            </p>
+          </div>
+          <div className="flex flex-col gap-1">
+            {/* Zone des barres — hauteur fixe pour que les % fonctionnent */}
+            <div className="flex gap-2 h-20 items-end">
+              {top5.map((player) => {
+                const pct = Math.round((player[sortKey] / leaderValue) * 100);
+                return (
+                  <div
+                    key={player.player_name}
+                    className="flex-1 bg-primary border border-primary/40 transition-all"
+                    style={{ height: `${pct}%` }}
+                  />
+                );
+              })}
+            </div>
+            {/* Labels — rangée séparée, alignée sur chaque barre */}
+            <div className="flex gap-2">
+              {top5.map((player) => {
+                const initials = player.player_name
+                  .split(" ")
+                  .map((word) => word[0]?.toUpperCase() ?? "")
+                  .join("")
+                  .slice(0, 3);
+                return (
+                  <div key={player.player_name} className="flex-1 text-center">
+                    <span className="font-mono text-xs text-on-surface-variant tracking-widest">
+                      {initials}
+                    </span>
                   </div>
-                  <span className="font-mono text-xs text-on-surface-variant tracking-widest">
-                    {initials}
-                  </span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 

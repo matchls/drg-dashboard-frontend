@@ -11,10 +11,25 @@ export default function SideNav() {
 
   // navItems est défini ici car il utilise t() pour les labels traduits
   const navItems = [
-    { label: t("navTerminal"),       href: "/",          icon: "terminal",      active: true },
-    { label: t("navMissionControl"), href: "/dashboard", icon: "radar",         active: true },
-    { label: t("navAbyssBar"),       href: "/abyss-bar", icon: "local_bar",     active: true },
-    { label: t("navMemorial"),       href: "/leaderboard", icon: "military_tech", active: true },
+    { label: t("navTerminal"), href: "/", icon: "terminal", active: true },
+    {
+      label: t("navMissionControl"),
+      href: "/dashboard",
+      icon: "radar",
+      active: true,
+    },
+    {
+      label: t("navAbyssBar"),
+      href: "/abyss-bar",
+      icon: "local_bar",
+      active: true,
+    },
+    {
+      label: t("navMemorial"),
+      href: "/leaderboard",
+      icon: "military_tech",
+      active: true,
+    },
   ];
 
   useEffect(() => {
@@ -31,10 +46,10 @@ export default function SideNav() {
     <aside className="w-64 min-h-screen bg-surface-container flex flex-col border-r-4 border-outline">
       {/* Header */}
       <div className="p-6 border-b-4 border-outline">
-        <p className="text-xs tracking-[0.3em] text-on-surface-variant uppercase">
+        <p className="text-s tracking-[0.3em] text-on-surface-variant uppercase">
           {t("navSpaceRigProfile")}
         </p>
-        <p className="font-display text-2xl text-primary truncate">
+        <p className="font-display text-4xl text-primary truncate">
           {playerName}
         </p>
       </div>
@@ -68,15 +83,14 @@ export default function SideNav() {
         })}
       </nav>
 
-      {/* Bouton bas de page */}
-      <div className="p-4 border-t-4 border-outline">
+      {/*   <div className="p-4 border-t-4 border-outline">
         <Link
           href="/"
           className="block w-full bg-primary text-on-primary text-center font-display text-lg py-2 tracking-widest hover:bg-primary-fixed transition-colors"
         >
           {t("navStartMission")}
         </Link>
-      </div>
+      </div> */}
     </aside>
   );
 }

@@ -84,6 +84,12 @@ const translations = {
     lbSyncing: "SYNCING WITH MISSION CONTROL... [OK]",
     lbWarning: "⚠ SLACKERS WILL BE PROCESSED FOR LEAF-LOVER JUICE.",
 
+    // --- Friends ---
+    lbAllPlayers: "ALL MINERS",
+    lbFriendsOnly: "FRIENDS ONLY",
+    lbNoFriends: "NO FRIENDS YET — CLICK ★ ON A ROW TO ADD ONE",
+    lbFriend: "FRIEND",
+
     // --- SideNav ---
     navTerminal: "TERMINAL",
     navMissionControl: "MISSION CONTROL",
@@ -179,6 +185,12 @@ const translations = {
     lbCriticalSlacker: "FAINÉANT CRITIQUE",
     lbSyncing: "SYNCHRONISATION AVEC LE CONTRÔLE DE MISSION... [OK]",
     lbWarning: "⚠ LES FAINÉANTS SERONT TRANSFORMÉS EN JUS DE LEAF-LOVER.",
+
+    // --- Friends ---
+    lbAllPlayers: "TOUS LES MINEURS",
+    lbFriendsOnly: "AMIS SEULEMENT",
+    lbNoFriends: "AUCUN AMI — CLIQUE SUR ★ POUR EN AJOUTER UN",
+    lbFriend: "AMI",
 
     // --- SideNav ---
     navTerminal: "TERMINAL",
