@@ -7,10 +7,9 @@ import AbyssBarHonorRoll from "@/components/AbyssBarHonorRoll";
 
 export default function AbyssBarPage() {
   const [data, setData] = useState<DashboardData | null>(null);
-  // Nom connu (depuis une session active)
+  // Nom connu (depuis une session active). Vide pour un visiteur sans session :
+  // dans ce cas, le livre d'or affiche lui-même un champ pseudo (chemin invité).
   const [guestName, setGuestName] = useState("");
-  // Nom saisi manuellement par un visiteur sans save
-  const [nameInput, setNameInput] = useState("");
 
   useEffect(() => {
     const raw = sessionStorage.getItem("dashboardData");
@@ -25,9 +24,6 @@ export default function AbyssBarPage() {
       setGuestName(savedName);
     }
   }, []);
-
-  // Le nom actif : session connue en priorité, sinon saisie manuelle
-  const activePlayerName = guestName || nameInput;
 
   return (
     <div className="min-h-screen bg-background p-6 flex flex-col gap-6">
@@ -50,25 +46,9 @@ export default function AbyssBarPage() {
         </div>
       )}
 
-      {/* Input pseudo pour les visiteurs sans save */}
-      {!guestName && (
-        <div className="industrial-panel p-4 flex items-center gap-3">
-          <span className="material-symbols-outlined text-primary">
-            fingerprint
-          </span>
-          <input
-            type="text"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            placeholder="ENTER OPERATIVE ID TO LEAVE A MESSAGE"
-            className="flex-1 bg-transparent border-b-2 border-drg-border text-on-surface font-mono text-sm py-1 focus:outline-none focus:border-drg-orange placeholder:text-on-surface-variant placeholder:text-xs"
-          />
-        </div>
-      )}
-
-      {/* Guestbook */}
+      {/* Guestbook — gère lui-même la saisie du pseudo pour les invités */}
       <div className="industrial-panel p-6">
-        <AbyssBarGuestbook playerName={activePlayerName} />
+        <AbyssBarGuestbook playerName={guestName} />
       </div>
     </div>
   );
