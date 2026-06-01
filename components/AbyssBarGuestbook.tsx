@@ -1,15 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchGuestbook, type GuestbookEntry } from "@/lib/data/guestbook";
 import { saveGuestbookMessage } from "@/app/actions/saveGuestbookMessage";
 import { checkPlayer } from "@/app/actions/pinActions";
 import PinModal from "@/components/PinModal";
-
-interface GuestbookEntry {
-  player_name: string;
-  message: string;
-  updated_at: string;
-}
 
 interface Props {
   playerName: string;
@@ -30,10 +24,7 @@ export default function AbyssBarGuestbook({ playerName }: Props) {
 
   // Lecture des messages — reste en lecture seule via la clé anon (autorisée par les RLS).
   async function loadEntries() {
-    const { data } = await supabase
-      .from("guestbook")
-      .select("player_name, message, updated_at")
-      .order("updated_at", { ascending: false });
+    const data = await fetchGuestbook();
     if (data) setEntries(data);
   }
 

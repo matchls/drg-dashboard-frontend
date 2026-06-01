@@ -1,26 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
+import { fetchLeaderboard, type PlayerRow } from "@/lib/data/players";
 import { useTranslation, TranslationKey } from "@/lib/i18n";
 import { ClassName, CLASS_COLORS } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { getFriends, addFriend, removeFriend, isFriend } from "@/lib/friends";
 import { getDashboardSession } from "@/lib/session";
-
-interface PlayerRow {
-  player_name: string;
-  total_missions: number;
-  total_kills: number;
-  total_time_s: number;
-  total_distance_cm: number;
-  total_downs: number;
-  total_minerals: number;
-  driller_missions: number;
-  gunner_missions: number;
-  engineer_missions: number;
-  scout_missions: number;
-}
 
 // Calcule le badge de statut selon le nombre de missions
 // t est passé en paramètre car cette fonction est en dehors du composant (ne peut pas appeler un hook directement)
@@ -105,19 +91,12 @@ export default function LeaderboardPage() {
     setFriends(getFriends());
   }, []);
 
-  // Fetch Supabase — trié par missions
+  // Chargement du leaderboard via la couche d'accès aux données (trié par missions).
   useEffect(() => {
-    async function fetchPlayers() {
-      const { data, error } = await supabase
-        .from("players")
-        .select(
-          "player_name, total_missions, total_kills, total_time_s, total_distance_cm, total_downs, total_minerals, driller_missions, gunner_missions, engineer_missions, scout_missions",
-        )
-        .order("total_missions", { ascending: false });
-      if (error) console.error(error);
-      else setPlayers(data ?? []);
+    async function loadPlayers() {
+      setPlayers(await fetchLeaderboard());
     }
-    fetchPlayers();
+    loadPlayers();
   }, []);
 
   // Fonction appelée quand on clique sur un en-tête de colonne
