@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n";
 import { checkPlayer } from "@/app/actions/pinActions";
+import { savePlayerStats } from "@/app/actions/savePlayerStats";
+import { buildPlayerRow } from "@/lib/buildPlayerRow";
+import { getPrefs } from "@/lib/preferences";
 import PinModal from "@/components/PinModal";
 
 export default function UploadForm() {
@@ -81,31 +84,39 @@ export default function UploadForm() {
     }
   }
 
-  // Appelée par PinModal après succès (création ou vérification)
-  async function handlePinSuccess(pinHash: string) {
+  // Appelée par PinModal après succès — reçoit le PIN EN CLAIR (jamais persisté).
+  async function handlePinSuccess(pin: string) {
     setPinModalMode(null);
-    // Si nouveau joueur → stocker le hash pour l'upsert dans dashboard/page.tsx
-    if (pinHash) {
-      sessionStorage.setItem("pinHash", pinHash);
-    } else {
-      sessionStorage.removeItem("pinHash");
-    }
-    // Un vrai upload n'est jamais une démo — on nettoie le flag si l'utilisateur
-    // avait essayé le mode démo avant (sinon l'upsert Supabase est skippé)
+    // Un vrai upload n'est jamais une démo — on nettoie le flag éventuel.
     sessionStorage.removeItem("isDemo");
-    // Lance l'upload maintenant que l'identité est confirmée
+    // Lance l'upload maintenant que l'identité est saisie.
     setIsLoading(true);
     const response = await parseSaveFile(selectedFile!, playerName);
     resultRef.current = response;
+
+    // Écriture en base : VÉRIFIÉE côté serveur (le PIN y est recontrôlé), et
+    // uniquement si l'utilisateur accepte d'apparaître au leaderboard.
+    // Le PIN reste en mémoire le temps de l'appel, il n'est jamais stocké.
+    if (response.ok && response.data && getPrefs().showOnLeaderboard) {
+      const result = await savePlayerStats(
+        playerName,
+        pin,
+        buildPlayerRow(response.data),
+      );
+      if (!result.ok) console.error("savePlayerStats:", result.error);
+    }
+
     setApiDone(true);
   }
 
   async function handleDemo() {
     const demoPlayer = process.env.NEXT_PUBLIC_DEMO_PLAYER ?? "poussif";
+    // ilike = comparaison INSENSIBLE À LA CASSE : "poussif" retrouve "Poussif".
+    // (demoPlayer est une constante de config maîtrisée, sans joker % ou _.)
     const { data, error } = await supabase
       .from("players")
       .select("raw_data")
-      .eq("player_name", demoPlayer)
+      .ilike("player_name", demoPlayer)
       .single();
 
     if (error || !data?.raw_data) {
@@ -157,8 +168,9 @@ export default function UploadForm() {
       {pinModalMode && (
         <PinModal
           mode={pinModalMode}
-          playerName={playerName.trim().toUpperCase()}
+          playerName={playerName.trim()}
           onSuccess={handlePinSuccess}
+          onCancel={() => setPinModalMode(null)}
         />
       )}
       {/* Coins en rayures danger */}

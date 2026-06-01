@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { saveGuestbookMessage } from "@/app/actions/saveGuestbookMessage";
+import { checkPlayer } from "@/app/actions/pinActions";
+import PinModal from "@/components/PinModal";
 
 interface GuestbookEntry {
   player_name: string;
@@ -16,44 +19,84 @@ export default function AbyssBarGuestbook({ playerName }: Props) {
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Le modal PIN s'ouvre au moment de soumettre, pour prouver l'identité.
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  // Pseudo saisi par un invité quand aucune session n'est active (prop vide).
+  const [guestName, setGuestName] = useState("");
 
-  // Charger les messages au montage
-  useEffect(() => {
-    async function fetchEntries() {
-      const { data } = await supabase
-        .from("guestbook")
-        .select("player_name, message, updated_at")
-        .order("updated_at", { ascending: false });
-      if (data) setEntries(data);
-    }
-    fetchEntries();
-  }, []);
+  // Nom effectif : celui de la session (prop) en priorité, sinon la saisie invité.
+  const activeName = (playerName || guestName).trim();
 
-  // Soumettre ou mettre à jour le message
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!draft.trim()) return;
-    setSaving(true);
-    await supabase.from("guestbook").upsert(
-      {
-        player_name: playerName,
-        message: draft.trim(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "player_name" },
-    );
-    setSaving(false);
-    // Recharger les entrées après soumission
+  // Lecture des messages — reste en lecture seule via la clé anon (autorisée par les RLS).
+  async function loadEntries() {
     const { data } = await supabase
       .from("guestbook")
       .select("player_name, message, updated_at")
       .order("updated_at", { ascending: false });
     if (data) setEntries(data);
+  }
+
+  useEffect(() => {
+    loadEntries();
+  }, []);
+
+  // Soumission : on regarde si le pseudo est un joueur protégé par un PIN.
+  // - Joueur enregistré → on demande le PIN via le modal.
+  // - Invité (pseudo libre) → envoi direct, sans PIN.
+  // (Le serveur revérifie de toute façon : ce choix n'est qu'une question d'UX.)
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!draft.trim()) return;
+    if (!activeName) {
+      setError("⚠ ENTRE TON PSEUDO POUR LAISSER UN MESSAGE.");
+      return;
+    }
+    const { exists, hasPIN } = await checkPlayer(activeName);
+    if (hasPIN) {
+      // Joueur protégé → on exige le PIN.
+      setPinModalOpen(true);
+    } else if (exists) {
+      // Pseudo déjà pris par un joueur (sans PIN) → pas d'usurpation possible.
+      setError("⚠ CE PSEUDO APPARTIENT À UN JOUEUR. CHOISIS-EN UN AUTRE.");
+    } else {
+      // Pseudo libre → chemin invité.
+      await submitMessage("");
+    }
+  }
+
+  // Écriture VÉRIFIÉE côté serveur. pin = "" pour un invité.
+  async function submitMessage(pin: string) {
+    setSaving(true);
+    const result = await saveGuestbookMessage(activeName, pin, draft);
+    setSaving(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     setDraft("");
+    await loadEntries();
+  }
+
+  // Appelé par le modal après saisie + pré-vérification du PIN (chemin joueur).
+  function handlePinSuccess(pin: string) {
+    setPinModalOpen(false);
+    submitMessage(pin);
   }
 
   return (
     <div className="industrial-panel p-6 flex flex-col gap-4">
+      {/* Modal PIN — par-dessus le contenu */}
+      {pinModalOpen && (
+        <PinModal
+          mode="verify"
+          playerName={activeName.toUpperCase()}
+          onSuccess={handlePinSuccess}
+          onCancel={() => setPinModalOpen(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3 border-b-4 border-outline pb-3">
         <span className="material-symbols-outlined text-primary">
@@ -66,10 +109,26 @@ export default function AbyssBarGuestbook({ playerName }: Props) {
 
       {/* Formulaire */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-        <p className="font-mono text-xs text-on-surface-variant tracking-widest">
-          LAISSER UN MESSAGE EN TANT QUE{" "}
-          <span className="text-drg-orange">{playerName}</span>
-        </p>
+        {playerName ? (
+          <p className="font-mono text-xs text-on-surface-variant tracking-widest">
+            LAISSER UN MESSAGE EN TANT QUE{" "}
+            <span className="text-drg-orange">{playerName}</span>
+          </p>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <p className="font-mono text-xs text-on-surface-variant tracking-widest">
+              TON PSEUDO
+            </p>
+            <input
+              type="text"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              maxLength={32}
+              placeholder="ENTER OPERATIVE ID"
+              className="bg-surface-container-highest border border-drg-border text-on-surface font-mono text-sm p-2 focus:outline-none focus:border-drg-orange"
+            />
+          </div>
+        )}
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -78,6 +137,9 @@ export default function AbyssBarGuestbook({ playerName }: Props) {
           placeholder="Rock and Stone..."
           className="bg-surface-container-highest border border-drg-border text-on-surface font-mono text-sm p-2 resize-none focus:outline-none focus:border-drg-orange"
         />
+        {error && (
+          <p className="font-mono text-xs text-error tracking-widest">{error}</p>
+        )}
         <button
           type="submit"
           disabled={saving || !draft.trim()}
