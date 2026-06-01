@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchHonorRoll } from "@/lib/data/players";
 
 interface HonorEntry {
   label: string;
@@ -13,51 +13,30 @@ export default function AbyssBarHonorRoll() {
   const [honors, setHonors] = useState<HonorEntry[]>([]);
 
   useEffect(() => {
-    async function fetchHonors() {
-      // Une requête par stat pour trouver le max
-      const [tips, beers, rounds] = await Promise.all([
-        supabase
-          .from("players")
-          .select("player_name, bartender_tips")
-          .order("bartender_tips", { ascending: false })
-          .limit(1)
-          .single(),
-        supabase
-          .from("players")
-          .select("player_name, beers_consumed")
-          .order("beers_consumed", { ascending: false })
-          .limit(1)
-          .single(),
-        supabase
-          .from("players")
-          .select("player_name, rounds_ordered")
-          .order("rounds_ordered", { ascending: false })
-          .limit(1)
-          .single(),
-      ]);
-
+    async function loadHonors() {
+      const roll = await fetchHonorRoll();
       setHonors([
         {
           label: "PLUS GROS TIPSEUR",
-          playerName: tips.data?.player_name ?? null,
-          value: tips.data?.bartender_tips ?? 0,
+          playerName: roll.tips.playerName,
+          value: roll.tips.value,
           unit: "crédits",
         },
         {
           label: "PLUS GRAND BUVEUR",
-          playerName: beers.data?.player_name ?? null,
-          value: beers.data?.beers_consumed ?? 0,
+          playerName: roll.beers.playerName,
+          value: roll.beers.value,
           unit: "bières",
         },
         {
           label: "PLUS DE TOURNÉES",
-          playerName: rounds.data?.player_name ?? null,
-          value: rounds.data?.rounds_ordered ?? 0,
+          playerName: roll.rounds.playerName,
+          value: roll.rounds.value,
           unit: "tournées",
         },
       ]);
     }
-    fetchHonors();
+    loadHonors();
   }, []);
 
   return (
