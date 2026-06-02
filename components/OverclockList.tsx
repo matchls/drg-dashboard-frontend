@@ -2,7 +2,7 @@
 import { OverclocksData, CLASS_NAMES, CLASS_COLORS, CLASS_ICONS } from "@/lib/types";
 import { WEAPON_ICONS } from "@/lib/weaponIcons";
 import { useTranslation } from "@/lib/i18n";
-import { translateOverclockName } from "@/lib/data-translations";
+import { translateOverclockName } from "@/lib/i18n/data-translations";
 import { usePrefs } from "@/lib/PrefsContext";
 import Image from "next/image";
 import { useState } from "react";
