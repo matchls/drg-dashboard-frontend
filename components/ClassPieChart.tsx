@@ -10,7 +10,7 @@ import {
 import { DashboardData, CLASS_COLORS } from "@/lib/types";
 import { useTranslation } from "@/lib/i18n";
 import { usePrefs } from "@/lib/PrefsContext";
-import { translateStatName } from "@/lib/data-translations";
+import { translateStatName } from "@/lib/i18n/data-translations";
 
 interface Props {
   heroStats: DashboardData["hero_stats"];

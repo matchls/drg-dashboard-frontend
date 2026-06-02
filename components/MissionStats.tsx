@@ -5,7 +5,7 @@ import { DashboardData, CLASS_COLORS, CLASS_ICONS, ClassName } from "@/lib/types
 import { usePrefs } from "@/lib/PrefsContext";
 import { formatDistance, formatTime } from "@/lib/formatters";
 import { useTranslation, TranslationKey } from "@/lib/i18n";
-import { translateStatName } from "@/lib/data-translations";
+import { translateStatName } from "@/lib/i18n/data-translations";
 import { MISSION_STAT_ICONS, STATS_HIDDEN, STATS_SORT_LAST } from "@/lib/missionIcons";
 
 interface Props {
