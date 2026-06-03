@@ -46,7 +46,6 @@ export default function RootLayout({
       <body
         className={`${barlowCondensed.variable} ${bebasNeue.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-on-surface flex h-screen`}
       >
-        {" "}
         <PrefsProvider>
           <SideNav />
           <div className="flex flex-col flex-1 overflow-hidden">
