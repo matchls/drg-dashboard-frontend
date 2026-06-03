@@ -1,25 +1,24 @@
 "use client";
 import { fetchHonorRoll } from "@/lib/data/players";
 import { useAsync } from "@/lib/hooks/useAsync";
+import { useTranslation, TranslationKey } from "@/lib/i18n";
 
 interface HonorEntry {
-  label: string;
+  labelKey: TranslationKey;
   playerName: string | null;
   value: number;
-  unit: string;
+  unitKey: TranslationKey;
 }
 
 export default function AbyssBarHonorRoll() {
-  // useAsync remplace le useState + useEffect qui chargeaient le honor roll.
+  const t = useTranslation();
   const { data: roll } = useAsync(() => fetchHonorRoll());
 
-  // Transformation HonorRoll → liste de HonorEntry pour l'affichage.
-  // Calculée à chaque rendu (trivial : 3 entrées, pas de mémorisation nécessaire).
   const honors: HonorEntry[] = roll
     ? [
-        { label: "PLUS GROS TIPSEUR", playerName: roll.tips.playerName, value: roll.tips.value, unit: "crédits" },
-        { label: "PLUS GRAND BUVEUR", playerName: roll.beers.playerName, value: roll.beers.value, unit: "bières" },
-        { label: "PLUS DE TOURNÉES", playerName: roll.rounds.playerName, value: roll.rounds.value, unit: "tournées" },
+        { labelKey: "honorTopTipper", playerName: roll.tips.playerName, value: roll.tips.value, unitKey: "honorUnitCredits" },
+        { labelKey: "honorTopDrinker", playerName: roll.beers.playerName, value: roll.beers.value, unitKey: "honorUnitBeers" },
+        { labelKey: "honorTopRounds", playerName: roll.rounds.playerName, value: roll.rounds.value, unitKey: "honorUnitRounds" },
       ]
     : [];
 
@@ -30,23 +29,23 @@ export default function AbyssBarHonorRoll() {
           emoji_events
         </span>
         <p className="font-display text-xl text-on-surface tracking-widest">
-          MENTIONS SPÉCIALES
+          {t("honorRollTitle")}
         </p>
       </div>
       <div className="grid grid-cols-3 gap-4">
-        {honors.map((h) => (
+        {honors.map((entry) => (
           <div
-            key={h.label}
+            key={entry.labelKey}
             className="flex flex-col gap-1 border-l-2 border-drg-orange pl-3"
           >
             <p className="font-mono text-xs text-on-surface-variant tracking-widest">
-              {h.label}
+              {t(entry.labelKey)}
             </p>
             <p className="font-display text-lg text-drg-orange">
-              {h.playerName ?? "—"}
+              {entry.playerName ?? "—"}
             </p>
             <p className="font-mono text-xs text-on-surface">
-              {h.value.toLocaleString()} {h.unit}
+              {entry.value.toLocaleString()} {t(entry.unitKey)}
             </p>
           </div>
         ))}
