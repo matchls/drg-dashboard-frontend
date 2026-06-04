@@ -95,12 +95,15 @@ begin
     v_first := v_now;
     v_lock  := null; -- 1 échec ne déclenche pas de verrou (max_failures = 5)
 
-    -- ON CONFLICT gère la race condition entre deux INSERT simultanés (ligne absente)
+    -- ON CONFLICT gère la race condition entre deux INSERT simultanés (ligne absente).
+    -- RETURNING récupère la valeur réelle : en cas de conflit, failed_count vaut
+    -- pin_attempts.failed_count + 1 (pas v_count = 1), ce que le log doit refléter.
     insert into pin_attempts (player_name, ip, failed_count, first_failed_at, locked_until, updated_at)
     values (p_player_name, p_ip, v_count, v_first, v_lock, v_now)
     on conflict (player_name, ip) do update set
       failed_count = pin_attempts.failed_count + 1,
-      updated_at   = v_now;
+      updated_at   = v_now
+    returning failed_count into v_count;
   end if;
 
   return jsonb_build_object(
@@ -109,3 +112,11 @@ begin
   );
 end;
 $$;
+
+-- ── Étape 4 — RESTREINDRE l'accès à la RPC ──────────────────────────────────────
+-- Par défaut, PostgREST expose toutes les fonctions au rôle `anon`.
+-- Sans ces lignes, n'importe quel client navigateur pourrait appeler
+-- record_pin_failure et verrouiller n'importe quel joueur en 5 requêtes (DoS).
+-- On révoque l'accès public et on le réserve au rôle service_role (supabaseAdmin).
+revoke execute on function record_pin_failure(text, text) from public;
+grant  execute on function record_pin_failure(text, text) to service_role;
