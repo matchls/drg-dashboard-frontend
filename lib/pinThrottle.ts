@@ -5,28 +5,11 @@ import "server-only";
 // mémoire, perdu à chaque instance froide Vercel), l'état vit ici dans la table
 // Supabase `pin_attempts` : il est PARTAGÉ entre toutes les instances serverless.
 //
-// ⚠️ Limite assumée (best-effort) : le comptage est un read-modify-write, donc
-//    deux échecs strictement simultanés peuvent n'incrémenter qu'une fois (course).
-//    Le verrou finit quand même par tomber ; on accepte ce léger sous-comptage,
-//    comme rateLimit.ts. Une version atomique (RPC SQL) serait l'étape d'après.
+// L'incrément des échecs est délégué à la RPC Postgres `record_pin_failure`
+// (cf. sql/2026-06-01_pin-attempts-rate-limit.sql). La RPC utilise
+// SELECT … FOR UPDATE pour garantir qu'aucune tentative concurrente ne peut
+// être sous-comptée (#93).
 import { supabaseAdmin } from "./supabaseServer";
-
-const MAX_FAILURES = 5;
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_LOCK_MS = 24 * 60 * 60 * 1000;
-
-type AttemptRow = {
-  failed_count: number;
-  first_failed_at: string;
-  locked_until: string | null;
-};
-
-/** Backoff exponentiel borné : 15 min → 30 min → 1 h → … → 24 h max. */
-function lockDurationMs(failedCount: number): number {
-  const steps = failedCount - MAX_FAILURES;
-  const duration = WINDOW_MS * 2 ** steps;
-  return Math.min(duration, MAX_LOCK_MS);
-}
 
 /**
  * checkPinLock — le couple (joueur, IP) est-il actuellement verrouillé ?
@@ -48,54 +31,28 @@ export async function checkPinLock(
 }
 
 /**
- * recordFailure — enregistre un échec : incrémente dans la fenêtre, repart à 1 si
- * elle a expiré, et pose le verrou dès que le seuil est atteint. Journalise.
+ * recordFailure — enregistre un échec via la RPC atomique Postgres.
+ * L'incrément, le calcul de fenêtre et le verrou sont entièrement délégués
+ * à record_pin_failure (SELECT FOR UPDATE) : aucune race condition possible.
  */
 export async function recordFailure(
   playerName: string,
   ip: string,
 ): Promise<void> {
-  const now = Date.now();
-
-  const { data } = await supabaseAdmin
-    .from("pin_attempts")
-    .select("failed_count, first_failed_at, locked_until")
-    .eq("player_name", playerName)
-    .eq("ip", ip)
-    .maybeSingle<AttemptRow>();
-
-  // Fenêtre expirée (ou première fois) → on repart d'une fenêtre neuve à 1.
-  const windowExpired =
-    !data || now - new Date(data.first_failed_at).getTime() > WINDOW_MS;
-
-  const failedCount = windowExpired ? 1 : data!.failed_count + 1;
-  const firstFailedAt = windowExpired
-    ? new Date(now).toISOString()
-    : data!.first_failed_at;
-
-  // Seuil atteint → on (re)pose un verrou dont la durée dépend de la politique.
-  const lockedUntil =
-    failedCount >= MAX_FAILURES
-      ? new Date(now + lockDurationMs(failedCount)).toISOString()
-      : (data?.locked_until ?? null);
-
-  const { error } = await supabaseAdmin.from("pin_attempts").upsert(
-    {
-      player_name: playerName,
-      ip,
-      failed_count: failedCount,
-      first_failed_at: firstFailedAt,
-      locked_until: lockedUntil,
-      updated_at: new Date(now).toISOString(),
-    },
-    { onConflict: "player_name,ip" },
-  );
+  const { data, error } = await supabaseAdmin.rpc("record_pin_failure", {
+    p_player_name: playerName,
+    p_ip: ip,
+  });
 
   if (error) {
     // On log mais on ne fait pas échouer la vérification pour autant :
     // un souci de compteur ne doit pas rendre l'auth indisponible.
     console.error("pinThrottle.recordFailure:", error);
+    return;
   }
+
+  const result = data as { failed_count: number; locked_until: string | null };
+  const { failed_count: failedCount, locked_until: lockedUntil } = result;
 
   // Journalisation serveur des échecs (sans révéler quoi que ce soit au client).
   console.warn(
