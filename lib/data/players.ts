@@ -10,6 +10,7 @@
 // pour ne pas tirer la clé service_role dans le bundle client.
 
 import { supabase } from "@/lib/supabase";
+import { type SortKey, VALID_SORT_KEYS } from "@/lib/leaderboard";
 
 // Type partagé d'une ligne du leaderboard (projection des colonnes utiles de `players`).
 export interface PlayerRow {
@@ -30,18 +31,66 @@ export interface PlayerRow {
 const LEADERBOARD_COLUMNS =
   "player_name, total_missions, total_kills, total_time_s, total_distance_cm, total_downs, total_minerals, driller_missions, gunner_missions, engineer_missions, scout_missions";
 
-// Leaderboard complet, trié par missions décroissantes.
-// Sur erreur : log + tableau vide (comportement identique à l'ancien code inline).
-export async function fetchLeaderboard(): Promise<PlayerRow[]> {
+export const LEADERBOARD_PAGE_SIZE = 50;
+
+export interface LeaderboardParams {
+  sortKey?: SortKey;
+  ascending?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+// Leaderboard paginé, trié côté Supabase.
+// Retourne au plus pageSize joueurs (défaut 50), jamais toute la table.
+export async function fetchLeaderboard(params: LeaderboardParams = {}): Promise<PlayerRow[]> {
+  const {
+    sortKey = "total_missions",
+    ascending = false,
+    page = 0,
+    pageSize = LEADERBOARD_PAGE_SIZE,
+  } = params;
+
+  // Whitelist défensive : si la clé n'est pas autorisée, on replie sur missions
+  const safeKey = VALID_SORT_KEYS.includes(sortKey) ? sortKey : "total_missions";
+
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
   const { data, error } = await supabase
     .from("players")
     .select(LEADERBOARD_COLUMNS)
-    .order("total_missions", { ascending: false });
+    .order(safeKey, { ascending })
+    .range(from, to);
+
   if (error) {
     console.error(error);
     return [];
   }
   return data ?? [];
+}
+
+export interface CommunityTotals {
+  kills: number;
+  missions: number;
+}
+
+// Agrégats communautaires pour BountyTargets — projection minimale (2 colonnes).
+// Ne charge pas le leaderboard paginé pour ne pas mélanger les deux besoins.
+export async function fetchCommunityTotals(): Promise<CommunityTotals> {
+  const { data, error } = await supabase
+    .from("players")
+    .select("total_kills, total_missions");
+
+  if (error) {
+    console.error(error);
+    return { kills: 0, missions: 0 };
+  }
+
+  const rows = data ?? [];
+  return {
+    kills: rows.reduce((sum, p) => sum + p.total_kills, 0),
+    missions: rows.reduce((sum, p) => sum + p.total_missions, 0),
+  };
 }
 
 // Une "mention spéciale" : le joueur en tête d'une stat et sa valeur.
