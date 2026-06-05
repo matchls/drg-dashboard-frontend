@@ -30,14 +30,20 @@ export default function LeaderboardPage() {
   const [page, setPage] = useState(0);
   const t = useTranslation();
 
-  // Leaderboard paginé — le tri et la page déclenchent un nouveau fetch serveur
+  // Leaderboard paginé — fetch N+1 pour détecter s'il existe une page suivante.
+  // On demande un élément de plus que la taille de page ; si on l'obtient, hasMore est vrai.
+  // On ne passe que les LEADERBOARD_PAGE_SIZE premiers éléments au tableau.
   const { data: playersData } = useAsync(
-    () => fetchLeaderboard({ sortKey, ascending: sortAsc, page, pageSize: LEADERBOARD_PAGE_SIZE }),
+    () => fetchLeaderboard({ sortKey, ascending: sortAsc, page, pageSize: LEADERBOARD_PAGE_SIZE + 1 }),
     [sortKey, sortAsc, page],
   );
-  // Référence stable : évite qu'un nouveau [] soit créé à chaque rendu pendant le chargement,
-  // ce qui invaliderait inutilement les useMemo qui dépendent de players.
-  const players = useMemo(() => playersData ?? [], [playersData]);
+  // Référence stable sur les données brutes (N+1 items) — évite qu'un nouveau [] invalide
+  // inutilement les useMemo qui dépendent de rawPlayers pendant le chargement.
+  const rawPlayers = useMemo(() => playersData ?? [], [playersData]);
+  // hasMore exact : true seulement si Supabase a retourné l'item supplémentaire demandé.
+  const hasMore = rawPlayers.length > LEADERBOARD_PAGE_SIZE;
+  // On écarte le 51ème item — il a servi à détecter hasMore, pas à être affiché.
+  const players = useMemo(() => rawPlayers.slice(0, LEADERBOARD_PAGE_SIZE), [rawPlayers]);
 
   // Agrégats communautaires — requête séparée, indépendante de la pagination
   const { data: totalsData } = useAsync(() => fetchCommunityTotals());
@@ -85,9 +91,6 @@ export default function LeaderboardPage() {
       return key === meKey || friends.includes(key);
     });
   }, [players, friendsOnly, friends, meKey]);
-
-  // hasMore : si la page est pleine on suppose qu'il y a une suivante
-  const hasMore = players.length === LEADERBOARD_PAGE_SIZE;
 
   return (
     <div className="min-h-screen bg-background scanline-overlay p-6 flex flex-col gap-6">

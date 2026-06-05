@@ -53,6 +53,10 @@ export default function PlayerTable({
   // Le leaderboard doit les respecter au même titre que ClassCard.
   const { prefs } = usePrefs();
 
+  // Garde défensive : ne jamais rendre plus que pageSize lignes, même si le parent
+  // passe accidentellement une liste non bornée.
+  const safeRows = players.slice(0, pageSize);
+
   return (
     <div className="industrial-panel">
       <div className="p-4 border-b-4 border-outline flex items-center gap-3">
@@ -137,7 +141,7 @@ export default function PlayerTable({
             </tr>
           </thead>
           <tbody>
-            {players.map((player, index) => {
+            {safeRows.map((player, index) => {
               const globalRank = page * pageSize + index + 1;
               const normalizedName = normalizeName(player.player_name);
               const isCurrentPlayer =
@@ -231,7 +235,7 @@ export default function PlayerTable({
               );
             })}
             {/* Message si aucun ami en mode "amis seulement" */}
-            {friendsOnly && players.length === 0 && (
+            {friendsOnly && safeRows.length === 0 && (
               <tr>
                 <td colSpan={10} className="p-8 font-mono text-xs text-on-surface-variant text-center tracking-widest">
                   {t("lbNoFriends")}
@@ -239,7 +243,7 @@ export default function PlayerTable({
               </tr>
             )}
             {/* Message de fin de liste : page vide hors mode "amis" (ex: hasMore faux positif) */}
-            {!friendsOnly && players.length === 0 && (
+            {!friendsOnly && safeRows.length === 0 && (
               <tr>
                 <td colSpan={10} className="p-8 font-mono text-xs text-on-surface-variant text-center tracking-widest">
                   {t("lbEndOfList")}
