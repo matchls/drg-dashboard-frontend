@@ -238,6 +238,14 @@ export default function PlayerTable({
                 </td>
               </tr>
             )}
+            {/* Message de fin de liste : page vide hors mode "amis" (ex: hasMore faux positif) */}
+            {!friendsOnly && players.length === 0 && (
+              <tr>
+                <td colSpan={10} className="p-8 font-mono text-xs text-on-surface-variant text-center tracking-widest">
+                  {t("lbEndOfList")}
+                </td>
+              </tr>
+            )}
             {/* Avertissement final */}
             <tr>
               <td
