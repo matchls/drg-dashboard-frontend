@@ -1,4 +1,3 @@
-import { type PlayerRow } from "@/lib/data/players";
 import { TranslationKey } from "@/lib/i18n";
 import {
   COMMUNITY_KILL_MILESTONE,
@@ -6,13 +5,13 @@ import {
 } from "@/lib/leaderboard";
 
 interface BountyTargetsProps {
-  players: PlayerRow[];
+  // Agrégats globaux issus de fetchCommunityTotals() — pas le leaderboard paginé
+  communityKills: number;
+  communityMissions: number;
   t: (key: TranslationKey) => string;
 }
 
-export default function BountyTargets({ players, t }: BountyTargetsProps) {
-  const communityKills    = players.reduce((sum, p) => sum + p.total_kills, 0);
-  const communityMissions = players.reduce((sum, p) => sum + p.total_missions, 0);
+export default function BountyTargets({ communityKills, communityMissions, t }: BountyTargetsProps) {
 
   return (
     <div className="industrial-panel p-4 flex flex-col gap-4">

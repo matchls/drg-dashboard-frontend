@@ -18,6 +18,15 @@ export type SortKey =
   | "total_distance_cm"
   | "total_downs";
 
+// Tableau runtime pour valider une SortKey reçue dynamiquement
+export const VALID_SORT_KEYS: SortKey[] = [
+  "total_missions",
+  "total_kills",
+  "total_time_s",
+  "total_distance_cm",
+  "total_downs",
+];
+
 // Calcule le badge de statut selon le nombre de missions
 // t est passé en paramètre car cette fonction est en dehors du composant (ne peut pas appeler un hook directement)
 export function getStatusBadge(

@@ -11,7 +11,7 @@ import { formatTime, formatDistance } from "@/lib/formatters";
 
 
 interface PlayerTableProps {
-  // Joueurs déjà triés ET filtrés (filtre "amis seulement") par la page.
+  // Joueurs de la page courante (triés et filtrés).
   players: PlayerRow[];
   currentPlayerName: string | null;
   sortKey: SortKey;
@@ -22,9 +22,15 @@ interface PlayerTableProps {
   onSort: (key: SortKey) => void;
   onToggleFriend: (name: string) => void;
   onFriendsOnlyChange: (value: boolean) => void;
+  // Pagination
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  onPrevPage: () => void;
+  onNextPage: () => void;
 }
 
-// Table Company Spreadsheet — classement triable, filtre amis, navigation profil.
+// Table Company Spreadsheet — classement triable, paginé, filtre amis, navigation profil.
 export default function PlayerTable({
   players,
   currentPlayerName,
@@ -36,6 +42,11 @@ export default function PlayerTable({
   onSort,
   onToggleFriend,
   onFriendsOnlyChange,
+  page,
+  pageSize,
+  hasMore,
+  onPrevPage,
+  onNextPage,
 }: PlayerTableProps) {
   const router = useRouter();
   // Préférences utilisateur (unité de distance km/mi, format de temps h / j+h).
@@ -127,6 +138,7 @@ export default function PlayerTable({
           </thead>
           <tbody>
             {players.map((player, index) => {
+              const globalRank = page * pageSize + index + 1;
               const normalizedName = normalizeName(player.player_name);
               const isCurrentPlayer =
                 currentPlayerName != null &&
@@ -149,7 +161,7 @@ export default function PlayerTable({
                   `}
                 >
                   <td className="p-4 font-mono text-sm text-on-surface-variant">
-                    {index + 1}
+                    {globalRank}
                   </td>
                   <td className="p-4 font-display text-lg tracking-widest">
                     {player.player_name}
@@ -237,6 +249,27 @@ export default function PlayerTable({
             </tr>
           </tbody>
         </table>
+      </div>
+
+      {/* Contrôles de pagination */}
+      <div className="p-4 border-t border-outline flex items-center justify-between font-mono text-xs tracking-widest">
+        <button
+          onClick={onPrevPage}
+          disabled={page === 0}
+          className="px-3 py-1 border-2 border-outline text-on-surface-variant disabled:opacity-30 hover:border-drg-orange hover:text-on-surface transition-colors"
+        >
+          ← PREV
+        </button>
+        <span className="text-on-surface-variant">
+          PAGE {page + 1}
+        </span>
+        <button
+          onClick={onNextPage}
+          disabled={!hasMore}
+          className="px-3 py-1 border-2 border-outline text-on-surface-variant disabled:opacity-30 hover:border-drg-orange hover:text-on-surface transition-colors"
+        >
+          NEXT →
+        </button>
       </div>
     </div>
   );
