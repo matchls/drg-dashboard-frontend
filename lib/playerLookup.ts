@@ -16,14 +16,32 @@ export async function findPlayerByName(
   const name = rawName.trim();
   if (!name) return null;
 
-  const { data } = await supabaseAdmin
+  // Étape 1 — identifier le joueur sans charger pin_hash.
+  // ilike traite % et _ comme jokers : on les échappe (même logique que
+  // getPlayerProfile) pour que la recherche reste bornée à un seul résultat.
+  const escaped = name.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+  const { data: nameRows } = await supabaseAdmin
+    .from("players")
+    .select("player_name")
+    .ilike("player_name", escaped);
+
+  const exactName = nameRows?.find(
+    (p) => p.player_name.toUpperCase() === name.toUpperCase(),
+  )?.player_name;
+
+  if (!exactName) return null;
+
+  // Étape 2 — charger pin_hash par égalité exacte sur le nom confirmé.
+  const { data, error } = await supabaseAdmin
     .from("players")
     .select("player_name, pin_hash")
-    .ilike("player_name", name); // insensible à la casse
+    .eq("player_name", exactName)
+    .single();
 
-  // ilike traite % et _ comme des jokers → on reconfirme par une égalité exacte
-  // insensible à la casse (fail closed : au pire on sur-bloque, jamais l'inverse).
-  return (
-    data?.find((p) => p.player_name.toUpperCase() === name.toUpperCase()) ?? null
-  );
+  if (error) {
+    console.error("[findPlayerByName] erreur étape 2 :", error.message);
+    return null;
+  }
+
+  return data ?? null;
 }

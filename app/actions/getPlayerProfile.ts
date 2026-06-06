@@ -17,16 +17,34 @@ export async function getPlayerProfile(
   const name = rawName.trim();
   if (!name) return null;
 
-  const { data } = await supabaseAdmin
+  // Étape 1 — identifier le joueur sans charger raw_data.
+  // ilike traite % et _ comme jokers : on les échappe pour que la recherche
+  // reste bornée même si le pseudo contient ces caractères.
+  // PostgreSQL utilise \ comme caractère d'échappement par défaut pour ILIKE.
+  const escaped = name.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+  const { data: nameRows } = await supabaseAdmin
     .from("players")
-    .select("player_name, raw_data")
-    .ilike("player_name", name); // insensible à la casse (un pseudo = une identité)
+    .select("player_name")
+    .ilike("player_name", escaped);
 
-  // ilike traite % et _ comme des jokers → on reconfirme par une égalité exacte
-  // insensible à la casse (fail closed : au pire on ne trouve rien).
-  const row = data?.find(
+  const exactName = nameRows?.find(
     (p) => p.player_name.toUpperCase() === name.toUpperCase(),
-  );
+  )?.player_name;
 
-  return (row?.raw_data as DashboardData) ?? null;
+  if (!exactName) return null;
+
+  // Étape 2 — charger raw_data pour le seul joueur confirmé, par égalité exacte.
+  // eq n'interprète jamais % ou _ comme jokers → un seul résultat possible.
+  const { data, error } = await supabaseAdmin
+    .from("players")
+    .select("raw_data")
+    .eq("player_name", exactName)
+    .single();
+
+  if (error) {
+    console.error("[getPlayerProfile] erreur étape 2 :", error.message);
+    return null;
+  }
+
+  return (data?.raw_data as DashboardData) ?? null;
 }
